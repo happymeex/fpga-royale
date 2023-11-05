@@ -2,6 +2,7 @@
 `default_nettype none
 
 module graphics (
+  input wire clk_100mhz;
   input wire active_draw;
   output logic [2:0] hdmi_tx_p;
   output logic [2:0] hdmi_tx_n;
@@ -9,6 +10,9 @@ module graphics (
 );
 
   logic [7:0] red, green, blue;
+  logic clk_pixel, clk_5x;
+  hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
+          .reset(0), .locked(locked), .clk_ref(clk_100mhz));
 
   // TODO: logic for retrieving R,G,B
 
