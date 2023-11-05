@@ -1,13 +1,18 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module graphics (
+module graphics #(
+  PARAMETER SPRITE_FRAME_DIM = 64, // width and height of single frame
+  PARAMETER NUM_FRAMES = 512, // total number of frames across all sprites
+  PARAMETER WIDTH = 720,
+  PARAMETER HEIGHT = 1280
+)(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
   input wire active_draw,
   input wire sprite_valid,
-  input wire [9:0] sprite_x,
-  input wire [10:0] sprite_y,
+  input wire [$clog2(WIDTH)-1:0] sprite_x,
+  input wire [$clog2(HEIGHT)-1:0] sprite_y,
   input wire [3:0] sprite_frame_number,
   input wire [9:0] hcount,
   input wire [10:0] vcount,
@@ -18,24 +23,45 @@ module graphics (
 );
 
   logic [7:0] red, green, blue;
+  logic [23:0] color_out;
+  assign red = active_draw ? color_out[23:16] : 0;
+  assign green = active_draw ? color_out[15:8] : 0;
+  assign blue = active_draw ? color_out[7:0] : 0;
 
-  // TODO: logic for retrieving R,G,B
+  logic [23:0] color_store;
 
-  //  Xilinx Single Port Read First RAM (BROM containing spritesheet)
+  // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(24),                       // ROM data width
-    .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
+    .RAM_WIDTH(24),                       // ROM data width: R,B,G
+    .RAM_DEPTH(NUM_FRAMES * SPRITE_FRAME_DIM * SPRITE_FRAME_DIM),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(spritesheet.mem))
   ) sprite_mem (
     .addra(),     // Address bus, width determined from RAM_DEPTH
     .dina(),       // RAM input data, width determined from RAM_WIDTH
-    .clka(clk_pixel),       // Clock
+    .clka(clk_pixel),
     .wea(1'b0),         // writing disabled
+    .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(color_store)      // RAM output data, width determined from RAM_WIDTH
+  );
+
+  // BRAM for upcoming frame
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(24),                       // RAM data width
+    .RAM_DEPTH(WIDTH * HEIGHT),
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()
+  ) frame_mem (
+    .addra(),     // Address bus, width determined from RAM_DEPTH
+    .dina(),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_pixel),
+    .wea(~active_draw),         // writing
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
-    .douta()      // RAM output data, width determined from RAM_WIDTH
+    .douta(color)      // RAM output data, width determined from RAM_WIDTH
   );
 
   // HDMI protocol
