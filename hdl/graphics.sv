@@ -2,19 +2,41 @@
 `default_nettype none
 
 module graphics (
-  input wire clk_100mhz;
-  input wire active_draw;
-  output logic [2:0] hdmi_tx_p;
-  output logic [2:0] hdmi_tx_n;
-  output logic hdmi_clk_p, hdmi_clk_n, //differential hdmi clock
+  input wire sys_rst,
+  input wire clk_pixel, clk_5x,
+  input wire active_draw,
+  input wire sprite_valid,
+  input wire [9:0] sprite_x,
+  input wire [10:0] sprite_y,
+  input wire [3:0] sprite_frame_number,
+  input wire [9:0] hcount,
+  input wire [10:0] vcount,
+  input wire vert_sync, hor_sync,
+  output logic [2:0] hdmi_tx_p,
+  output logic [2:0] hdmi_tx_n,
+  output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
 );
 
   logic [7:0] red, green, blue;
-  logic clk_pixel, clk_5x;
-  hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
-          .reset(0), .locked(locked), .clk_ref(clk_100mhz));
 
   // TODO: logic for retrieving R,G,B
+
+  //  Xilinx Single Port Read First RAM (BROM containing spritesheet)
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(24),                       // ROM data width
+    .RAM_DEPTH(1024),                     // Specify RAM depth (number of entries)
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE(`FPATH(spritesheet.mem))
+  ) sprite_mem (
+    .addra(),     // Address bus, width determined from RAM_DEPTH
+    .dina(),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_pixel),       // Clock
+    .wea(1'b0),         // writing disabled
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta()      // RAM output data, width determined from RAM_WIDTH
+  );
 
   // HDMI protocol
 
