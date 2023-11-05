@@ -1,11 +1,20 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module graphics ();
+module graphics (
+  input wire active_draw;
+  output logic [2:0] hdmi_tx_p;
+  output logic [2:0] hdmi_tx_n;
+  output logic hdmi_clk_p, hdmi_clk_n, //differential hdmi clock
+);
+
+  logic [7:0] red, green, blue;
+
+  // TODO: logic for retrieving R,G,B
+
+  // HDMI protocol
 
   logic tmds_signal [2:0];
-  logic hdmi_tx_p;
-  logic hdmi_tx_n;
   logic [9:0] tmds_10b [0:2]; //output of each TMDS encoder!
 
   //three tmds_encoders (blue, green, red)
