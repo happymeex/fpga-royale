@@ -42,8 +42,9 @@ for pixel_row in pixel_rows:
             pixel = []
     pixels.append(pixel_list)
 
+outfile = "data/spritesheet.mem"
 # write pixel values to file, frame by frame
-with open(f"data/{filename}.txt", "w") as f:
+with open(outfile, "w") as f:
     for y in range(0, height, frame_height):
         for x in range(0, width, frame_width):
             for r in range(frame_height):
@@ -52,4 +53,4 @@ with open(f"data/{filename}.txt", "w") as f:
                     pixel = [f"{val:02x}" for val in pixels[y+r][x+c]]
                     f.write(f"{''.join(pixel)}\n")
 
-print("wrote spritesheet data to", f"data/{filename}.txt")
+print("wrote spritesheet data to", outfile)

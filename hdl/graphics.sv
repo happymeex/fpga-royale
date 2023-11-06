@@ -2,7 +2,8 @@
 `default_nettype none
 
 module graphics #(
-  PARAMETER SPRITE_FRAME_DIM = 64, // width and height of single frame
+  PARAMETER SPRITE_FRAME_WIDTH = 64, // width and height of single frame
+  PARAMETER SPRITE_FRAME_HEIGHT = 64,
   PARAMETER NUM_FRAMES = 512, // total number of frames across all sprites
   PARAMETER WIDTH = 720,
   PARAMETER HEIGHT = 1280
@@ -13,7 +14,7 @@ module graphics #(
   input wire sprite_valid,
   input wire [$clog2(WIDTH)-1:0] sprite_x,
   input wire [$clog2(HEIGHT)-1:0] sprite_y,
-  input wire [3:0] sprite_frame_number,
+  input wire [$clog2(NUM_FRAMES)-1:0] sprite_frame_number,
   input wire [$clog2(WIDTH)-1:0] hcount,
   input wire [$clog2(HEIGHT)-1:0] vcount,
   input wire vert_sync, hor_sync,
@@ -22,27 +23,43 @@ module graphics #(
   output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
 );
 
-  logic [7:0] red, green, blue; // values sent to HDMI during drawing period
-  logic [23:0] color_out;
-  assign red = active_draw ? color_out[23:16] : 0;
-  assign green = active_draw ? color_out[15:8] : 0;
-  assign blue = active_draw ? color_out[7:0] : 0;
+  localparam PIXELS_PER_FRAME = SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
+  localparam SPRITE_MEM_DEPTH = NUM_FRAMES * SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
+  logic [$clog2(SPRITE_MEM_DEPTH)-1:0] spritesheet_addr;
 
-  logic [23:0] color_read;
+  logic [7:0] red, green, blue; // values sent to HDMI during drawing period
+  logic [31:0] color_out;
+  assign red = active_draw ? color_out [31:24] : 0;
+  assign blue = active_draw ? color_out[23:16] : 0;
+  assign green = active_draw ? color_out[15:8] : 0;
+
+  logic [31:0] color_read;
+  logic transparent_pixel;
+  logic reading;
+  assign transparent_pixel = ~color_read[0]
   always_ff @(posedge clk_pixel) begin
     if (active_draw) begin
-      
+      //
+    end else begin
+      // buffer period: read from sprite mem and write to frame mem
+      if (sprite_valid && ~reading) begin
+        spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
+        reading <= 1;
+      end else if (sprite_valid) begin
+        spritesheet_addr <= spritesheet_addr + 1;
+      end
     end
   end
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(25),                       // ROM data width: R,B,G,A
+    .RAM_WIDTH(32),                       // ROM data width: R,B,G,A
+    .RAM_DEPTH(SPRITE_MEM_DEPTH),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(spritesheet.mem))
   ) sprite_mem (
-    .addra(),     // Address bus, width determined from RAM_DEPTH
-    .dina(),       // RAM input data, width determined from RAM_WIDTH
+    .addra(spritesheet_addr),     // Address bus, width determined from RAM_DEPTH
+    .dina(),
     .clka(clk_pixel),
     .wea(1'b0),         // writing disabled
     .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
@@ -53,7 +70,7 @@ module graphics #(
 
   // BRAM for upcoming frame
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(25),                       // RAM data width: R,G,B,A
+    .RAM_WIDTH(32),                       // RAM data width: R,G,B,A
     .RAM_DEPTH(WIDTH * HEIGHT),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()
@@ -65,7 +82,7 @@ module graphics #(
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
-    .douta(color)      // RAM output data, width determined from RAM_WIDTH
+    .douta(color_out)      // RAM output data, width determined from RAM_WIDTH
   );
 
   // HDMI protocol
