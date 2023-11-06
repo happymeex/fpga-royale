@@ -14,26 +14,30 @@ module graphics #(
   input wire [$clog2(WIDTH)-1:0] sprite_x,
   input wire [$clog2(HEIGHT)-1:0] sprite_y,
   input wire [3:0] sprite_frame_number,
-  input wire [9:0] hcount,
-  input wire [10:0] vcount,
+  input wire [$clog2(WIDTH)-1:0] hcount,
+  input wire [$clog2(HEIGHT)-1:0] vcount,
   input wire vert_sync, hor_sync,
   output logic [2:0] hdmi_tx_p,
   output logic [2:0] hdmi_tx_n,
   output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
 );
 
-  logic [7:0] red, green, blue;
+  logic [7:0] red, green, blue; // values sent to HDMI during drawing period
   logic [23:0] color_out;
   assign red = active_draw ? color_out[23:16] : 0;
   assign green = active_draw ? color_out[15:8] : 0;
   assign blue = active_draw ? color_out[7:0] : 0;
 
-  logic [23:0] color_store;
+  logic [23:0] color_read;
+  always_ff @(posedge clk_pixel) begin
+    if (active_draw) begin
+      
+    end
+  end
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(24),                       // ROM data width: R,B,G
-    .RAM_DEPTH(NUM_FRAMES * SPRITE_FRAME_DIM * SPRITE_FRAME_DIM),
+    .RAM_WIDTH(25),                       // ROM data width: R,B,G,A
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(spritesheet.mem))
   ) sprite_mem (
@@ -44,18 +48,18 @@ module graphics #(
     .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
-    .douta(color_store)      // RAM output data, width determined from RAM_WIDTH
+    .douta(color_read)      // RAM output data, width determined from RAM_WIDTH
   );
 
   // BRAM for upcoming frame
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(24),                       // RAM data width
+    .RAM_WIDTH(25),                       // RAM data width: R,G,B,A
     .RAM_DEPTH(WIDTH * HEIGHT),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()
   ) frame_mem (
     .addra(),     // Address bus, width determined from RAM_DEPTH
-    .dina(),       // RAM input data, width determined from RAM_WIDTH
+    .dina(color_read),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_pixel),
     .wea(~active_draw),         // writing
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use

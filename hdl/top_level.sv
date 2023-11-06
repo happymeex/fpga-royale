@@ -18,15 +18,15 @@ module top_level(
           .reset(0), .locked(locked), .clk_ref(clk_100mhz));
   
   video_sig_gen mvg(
-      .clk_pixel_in(clk_pixel),
-      .rst_in(sys_rst),
-      .hcount_out(hcount),
-      .vcount_out(vcount),
-      .vs_out(vert_sync),
-      .hs_out(hor_sync),
-      .ad_out(active_draw),
-      .nf_out(new_frame),
-      .fc_out(frame_count)
+    .clk_pixel_in(clk_pixel),
+    .rst_in(sys_rst),
+    .hcount_out(hcount),
+    .vcount_out(vcount),
+    .vs_out(vert_sync),
+    .hs_out(hor_sync),
+    .ad_out(active_draw),
+    .nf_out(new_frame),
+    .fc_out(frame_count)
   );
 
   graphics gr(
