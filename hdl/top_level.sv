@@ -16,6 +16,7 @@ module top_level(
   logic new_frame;
   logic [5:0] frame_count;
 
+  logic locked; // unused
   logic sys_rst;
   assign sys_rst = 0;
 
@@ -38,7 +39,7 @@ module top_level(
   graphics #(
     .SPRITE_FRAME_WIDTH(192), // testing
     .SPRITE_FRAME_HEIGHT(128),
-    .NUM_FRAMES(23)
+    .NUM_FRAMES(3)
   ) gr(
     .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),
@@ -51,7 +52,7 @@ module top_level(
     .sprite_valid(1),
     .sprite_x(100),
     .sprite_y(200),
-    .sprite_frame_number(3),
+    .sprite_frame_number(1),
     .hdmi_tx_p(hdmi_tx_p),
     .hdmi_tx_n(hdmi_tx_n),
     .hdmi_clk_p(hdmi_clk_p),

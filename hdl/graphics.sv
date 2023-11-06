@@ -1,12 +1,18 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+`ifdef SYNTHESIS
+`define FPATH(X) `"X`"
+`else /* ! SYNTHESIS */
+`define FPATH(X) `"data/X`"
+`endif  /* ! SYNTHESIS */
+
 module graphics #(
-  PARAMETER SPRITE_FRAME_WIDTH = 64, // width and height of single frame
-  PARAMETER SPRITE_FRAME_HEIGHT = 64,
-  PARAMETER NUM_FRAMES = 512, // total number of frames across all sprites
-  PARAMETER WIDTH = 1280,
-  PARAMETER HEIGHT = 720
+  parameter SPRITE_FRAME_WIDTH = 64, // width and height of single frame
+  parameter SPRITE_FRAME_HEIGHT = 64,
+  parameter NUM_FRAMES = 512, // total number of frames across all sprites
+  parameter WIDTH = 1280,
+  parameter HEIGHT = 720
 )(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
