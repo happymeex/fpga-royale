@@ -40,8 +40,8 @@ module graphics #(
   logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
                      (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
   assign red = in_sprite ? color_out [23:16] : 0;
-  assign blue = in_sprite ? color_out[15:8] : 0;
-  assign green = in_sprite ? color_out[7:0] : 0;
+  assign green = in_sprite ? color_out[15:8] : 0;
+  assign blue = in_sprite ? color_out[7:0] : 0;
 
   assign spritesheet_addr = sprite_frame_number * PIXELS_PER_FRAME
     + (hcount - sprite_x) + (vcount - sprite_y) * SPRITE_FRAME_WIDTH;
