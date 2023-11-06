@@ -39,7 +39,7 @@ module top_level(
   graphics #(
     .SPRITE_FRAME_WIDTH(192), // testing
     .SPRITE_FRAME_HEIGHT(128),
-    .NUM_FRAMES(3)
+    .NUM_FRAMES(5)
   ) gr(
     .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),

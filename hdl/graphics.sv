@@ -12,7 +12,8 @@ module graphics #(
   parameter SPRITE_FRAME_HEIGHT = 64,
   parameter NUM_FRAMES = 512, // total number of frames across all sprites
   parameter WIDTH = 1280,
-  parameter HEIGHT = 720
+  parameter HEIGHT = 720,
+  parameter PALETTE_SIZE = 8
 )(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
@@ -31,21 +32,21 @@ module graphics #(
 
   localparam PIXELS_PER_FRAME = SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
   localparam SPRITE_MEM_DEPTH = NUM_FRAMES * SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
+  localparam PALETTE_WIDTH = $clog2(PALETTE_SIZE);
   logic [$clog2(SPRITE_MEM_DEPTH)-1:0] spritesheet_addr;
 
   logic [7:0] red, green, blue; // values sent to HDMI during drawing period
-  logic [31:0] color_out;
-  assign red = active_draw ? color_out [31:24] : 0;
-  assign blue = active_draw ? color_out[23:16] : 0;
-  assign green = active_draw ? color_out[15:8] : 0;
-
+  logic [23:0] color_out;
   logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
                      (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
+  assign red = in_sprite ? color_out [23:16] : 0;
+  assign blue = in_sprite ? color_out[15:8] : 0;
+  assign green = in_sprite ? color_out[7:0] : 0;
 
   assign spritesheet_addr = sprite_frame_number * PIXELS_PER_FRAME
     + (hcount - sprite_x) + (vcount - sprite_y) * SPRITE_FRAME_WIDTH;
 
-  logic [31:0] color_read;
+  logic [23:0] color_read;
   //logic transparent_pixel;
   //logic reading;
   //assign transparent_pixel = ~color_read[0]
@@ -64,15 +65,33 @@ module graphics #(
   //end
 
   assign color_out = color_read; // temporary: for testing
+  logic [PALETTE_WIDTH-1:0] color_index;
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(32),                       // ROM data width: R,B,G,A
+    .RAM_WIDTH(PALETTE_WIDTH),
     .RAM_DEPTH(SPRITE_MEM_DEPTH),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(spritesheet.mem))
   ) sprite_mem (
     .addra(spritesheet_addr),     // Address bus, width determined from RAM_DEPTH
+    .dina(),
+    .clka(clk_pixel),
+    .wea(1'b0),         // writing disabled
+    .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(color_index)      // RAM output data, width determined from RAM_WIDTH
+  );
+
+  // BROM containing palette
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(24), // RGB
+    .RAM_DEPTH(PALETTE_SIZE),
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE(`FPATH(palette.mem))
+  ) palette_mem (
+    .addra(color_index),     // Address bus, width determined from RAM_DEPTH
     .dina(),
     .clka(clk_pixel),
     .wea(1'b0),         // writing disabled
