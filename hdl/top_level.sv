@@ -2,7 +2,10 @@
 `default_nettype none
 
 module top_level(
-  input wire clk_100mhz;
+  input wire clk_100mhz,
+  output logic [2:0] hdmi_tx_p,
+  output logic [2:0] hdmi_tx_n,
+  output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
 );
   //signals related to driving the video pipeline
   logic [10:0] hcount;
@@ -12,6 +15,9 @@ module top_level(
   logic active_draw;
   logic new_frame;
   logic [5:0] frame_count;
+
+  logic sys_rst;
+  assign sys_rst = 0;
 
   logic clk_pixel, clk_5x;
   hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
@@ -29,11 +35,27 @@ module top_level(
     .fc_out(frame_count)
   );
 
-  graphics gr(
+  graphics #(
+    .SPRITE_FRAME_WIDTH(192), // testing
+    .SPRITE_FRAME_HEIGHT(128),
+    .NUM_FRAMES(23)
+  ) gr(
+    .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),
     .clk_5x(clk_5x),
+    .active_draw(active_draw),
     .hcount(hcount),
-    .vcount(vcount)
+    .vcount(vcount),
+    .vert_sync(vert_sync),
+    .hor_sync(hor_sync),
+    .sprite_valid(1),
+    .sprite_x(100),
+    .sprite_y(200),
+    .sprite_frame_number(3),
+    .hdmi_tx_p(hdmi_tx_p),
+    .hdmi_tx_n(hdmi_tx_n),
+    .hdmi_clk_p(hdmi_clk_p),
+    .hdmi_clk_n(hdmi_clk_n)
   );
 endmodule
 

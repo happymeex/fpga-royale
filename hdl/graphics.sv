@@ -5,8 +5,8 @@ module graphics #(
   PARAMETER SPRITE_FRAME_WIDTH = 64, // width and height of single frame
   PARAMETER SPRITE_FRAME_HEIGHT = 64,
   PARAMETER NUM_FRAMES = 512, // total number of frames across all sprites
-  PARAMETER WIDTH = 720,
-  PARAMETER HEIGHT = 1280
+  PARAMETER WIDTH = 1280,
+  PARAMETER HEIGHT = 720
 )(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
@@ -33,23 +33,31 @@ module graphics #(
   assign blue = active_draw ? color_out[23:16] : 0;
   assign green = active_draw ? color_out[15:8] : 0;
 
+  logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
+                     (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
+
+  assign spritesheet_addr = sprite_frame_number * PIXELS_PER_FRAME
+    + (hcount - sprite_x) + (vcount - sprite_y) * SPRITE_FRAME_WIDTH;
+
   logic [31:0] color_read;
-  logic transparent_pixel;
-  logic reading;
-  assign transparent_pixel = ~color_read[0]
-  always_ff @(posedge clk_pixel) begin
-    if (active_draw) begin
-      //
-    end else begin
-      // buffer period: read from sprite mem and write to frame mem
-      if (sprite_valid && ~reading) begin
-        spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
-        reading <= 1;
-      end else if (sprite_valid) begin
-        spritesheet_addr <= spritesheet_addr + 1;
-      end
-    end
-  end
+  //logic transparent_pixel;
+  //logic reading;
+  //assign transparent_pixel = ~color_read[0]
+  //always_ff @(posedge clk_pixel) begin
+  //  if (active_draw) begin
+  //    //
+  //  end else begin
+  //    // buffer period: read from sprite mem and write to frame mem
+  //    if (sprite_valid && ~reading) begin
+  //      spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
+  //      reading <= 1;
+  //    end else if (sprite_valid) begin
+  //      spritesheet_addr <= spritesheet_addr + 1;
+  //    end
+  //  end
+  //end
+
+  assign color_out = color_read; // temporary: for testing
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
@@ -68,22 +76,22 @@ module graphics #(
     .douta(color_read)      // RAM output data, width determined from RAM_WIDTH
   );
 
-  // BRAM for upcoming frame
-  xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(32),                       // RAM data width: R,G,B,A
-    .RAM_DEPTH(WIDTH * HEIGHT),
-    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-    .INIT_FILE()
-  ) frame_mem (
-    .addra(),     // Address bus, width determined from RAM_DEPTH
-    .dina(color_read),       // RAM input data, width determined from RAM_WIDTH
-    .clka(clk_pixel),
-    .wea(~active_draw),         // writing
-    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
-    .rsta(sys_rst),       // Output reset (does not affect memory contents)
-    .regcea(1'b1),   // Output register enable
-    .douta(color_out)      // RAM output data, width determined from RAM_WIDTH
-  );
+  // BRAM for upcoming frame, hidden for now (testing)
+  //xilinx_single_port_ram_read_first #(
+  //  .RAM_WIDTH(32),                       // RAM data width: R,G,B,A
+  //  .RAM_DEPTH(WIDTH * HEIGHT),
+  //  .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+  //  .INIT_FILE()
+  //) frame_mem (
+  //  .addra(),     // Address bus, width determined from RAM_DEPTH
+  //  .dina(color_read),       // RAM input data, width determined from RAM_WIDTH
+  //  .clka(clk_pixel),
+  //  .wea(~active_draw),         // writing
+  //  .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+  //  .rsta(sys_rst),       // Output reset (does not affect memory contents)
+  //  .regcea(1'b1),   // Output register enable
+  //  .douta(color_out)      // RAM output data, width determined from RAM_WIDTH
+  //);
 
   // HDMI protocol
 
