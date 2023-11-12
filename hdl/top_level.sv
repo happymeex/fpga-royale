@@ -44,6 +44,7 @@ module top_level(
     .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),
     .clk_5x(clk_5x),
+    .frame_count(frame_count),
     .active_draw(active_draw),
     .hcount(hcount),
     .vcount(vcount),

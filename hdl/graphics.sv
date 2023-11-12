@@ -18,6 +18,7 @@ module graphics #(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
   input wire active_draw,
+  input wire [5:0] frame_count,
   input wire sprite_valid,
   input wire [$clog2(WIDTH)-1:0] sprite_x,
   input wire [$clog2(HEIGHT)-1:0] sprite_y,
@@ -25,6 +26,7 @@ module graphics #(
   input wire [$clog2(WIDTH)-1:0] hcount,
   input wire [$clog2(HEIGHT)-1:0] vcount,
   input wire vert_sync, hor_sync,
+  output logic sprite_ready, // high when ready to receive sprite info for next frame
   output logic [2:0] hdmi_tx_p,
   output logic [2:0] hdmi_tx_n,
   output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
@@ -33,39 +35,27 @@ module graphics #(
   localparam PIXELS_PER_FRAME = SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
   localparam SPRITE_MEM_DEPTH = NUM_FRAMES * SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
   localparam PALETTE_WIDTH = $clog2(PALETTE_SIZE);
+  localparam CANVAS_PIXELS = WIDTH * HEIGHT;
   logic [$clog2(SPRITE_MEM_DEPTH)-1:0] spritesheet_addr;
 
   logic [7:0] red, green, blue; // values sent to HDMI during drawing period
   logic [23:0] color_out;
-  logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
-                     (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
-  assign red = in_sprite ? color_out [23:16] : 0;
-  assign green = in_sprite ? color_out[15:8] : 0;
-  assign blue = in_sprite ? color_out[7:0] : 0;
+  //logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
+  //                   (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
+  assign red = active_draw ? color_out[23:16] : 0;
+  assign green = active_draw ? color_out[15:8] : 0;
+  assign blue = active_draw ? color_out[7:0] : 0;
 
-  assign spritesheet_addr = sprite_frame_number * PIXELS_PER_FRAME
-    + (hcount - sprite_x) + (vcount - sprite_y) * SPRITE_FRAME_WIDTH;
+  logic [PALETTE_WIDTH-1:0] read_color_index; // written to frame storage
+  logic [PALETTE_WIDTH-1:0] color_index_1; // used to index output color
+  logic [PALETTE_WIDTH-1:0] color_index_2; // used to index output color
 
-  logic [23:0] color_read;
-  //logic transparent_pixel;
-  //logic reading;
-  //assign transparent_pixel = ~color_read[0]
-  //always_ff @(posedge clk_pixel) begin
-  //  if (active_draw) begin
-  //    //
-  //  end else begin
-  //    // buffer period: read from sprite mem and write to frame mem
-  //    if (sprite_valid && ~reading) begin
-  //      spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
-  //      reading <= 1;
-  //    end else if (sprite_valid) begin
-  //      spritesheet_addr <= spritesheet_addr + 1;
-  //    end
-  //  end
-  //end
+  logic reading; // high when graphics module is reading from spritesheet
+  logic write_mem_1; // high when frame storage 1 is written to as storage for next frame
+  logic write_mem_2 = ~write_mem_1;
 
-  assign color_out = color_read; // temporary: for testing
-  logic [PALETTE_WIDTH-1:0] color_index;
+  logic [$clog2(CANVAS_PIXELS)-1:0] output_index; // row-major order index of current (hcount, vcount)
+  assign output_index = hcount + WIDTH * vcount;
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
@@ -81,7 +71,7 @@ module graphics #(
     .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
-    .douta(color_index)      // RAM output data, width determined from RAM_WIDTH
+    .douta(read_color_index)
   );
 
   // BROM containing palette
@@ -91,32 +81,91 @@ module graphics #(
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE(`FPATH(palette.mem))
   ) palette_mem (
-    .addra(color_index),     // Address bus, width determined from RAM_DEPTH
+    .addra(write_mem_1 ? color_index_2 : color_index_1),     //
     .dina(),
     .clka(clk_pixel),
     .wea(1'b0),         // writing disabled
     .ena(1'b1),         // RAM Enable, for additional power savings, consider disabling during active draw
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
-    .douta(color_read)      // RAM output data, width determined from RAM_WIDTH
+    .douta(color_out)      // RAM output data, width determined from RAM_WIDTH
   );
 
-  // BRAM for upcoming frame, hidden for now (testing)
-  //xilinx_single_port_ram_read_first #(
-  //  .RAM_WIDTH(32),                       // RAM data width: R,G,B,A
-  //  .RAM_DEPTH(WIDTH * HEIGHT),
-  //  .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
-  //  .INIT_FILE()
-  //) frame_mem (
-  //  .addra(),     // Address bus, width determined from RAM_DEPTH
-  //  .dina(color_read),       // RAM input data, width determined from RAM_WIDTH
-  //  .clka(clk_pixel),
-  //  .wea(~active_draw),         // writing
-  //  .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
-  //  .rsta(sys_rst),       // Output reset (does not affect memory contents)
-  //  .regcea(1'b1),   // Output register enable
-  //  .douta(color_out)      // RAM output data, width determined from RAM_WIDTH
-  //);
+
+  // Two BRAMs for frame storage. During any given frame, one is written to,
+  // the other is read from; switch roles in next frame.
+
+  logic [$clog2(WIDTH * HEIGHT)-1:0] frame_loc_ptr; // pointer for writing palette value to frame storage
+  logic [$clog2(WIDTH)-1:0] frame_x;
+  logic [$clog2(HEIGHT)-1:0] frame_y;
+  assign frame_loc_ptr = frame_y * WIDTH + frame_x; // row major order
+
+
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(PALETTE_WIDTH),
+    .RAM_DEPTH(WIDTH * HEIGHT),
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()
+  ) frame_mem_1 (
+    .addra(write_mem_1 ? frame_loc_ptr : output_index),
+    .dina(read_color_index),       // RAM input data, width determined from RAM_WIDTH
+    .clka(clk_pixel),
+    .wea(write_mem_1 && reading),
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(color_index_1)      // RAM output data, width determined from RAM_WIDTH
+  );
+
+  xilinx_single_port_ram_read_first #(
+    .RAM_WIDTH(PALETTE_WIDTH),
+    .RAM_DEPTH(WIDTH * HEIGHT),
+    .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+    .INIT_FILE()
+  ) frame_mem_2 (
+    .addra(write_mem_2 ? frame_loc_ptr : output_index),
+    .dina(read_color_index),       //
+    .clka(clk_pixel),
+    .wea(write_mem_2 && reading),         // writing
+    .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rsta(sys_rst),       // Output reset (does not affect memory contents)
+    .regcea(1'b1),   // Output register enable
+    .douta(color_index_2)      // RAM output data, width determined from RAM_WIDTH
+  );
+
+  // the good stuff oh yeAH mhm
+  logic [5:0] prev_frame_count;
+  always_ff @(posedge clk_pixel) begin
+    prev_frame_count <= frame_count;
+    if (frame_count != prev_frame_count) begin
+      write_mem_1 <= ~write_mem_1; // swap
+    end
+    if (reading) begin
+      //
+      if (frame_x == sprite_x + WIDTH - 1 && frame_y == sprite_y + HEIGHT - 1) begin
+        // stop reading
+        sprite_ready <= 1;
+        reading <= 0;
+      end else begin
+        if (frame_x == sprite_x + WIDTH - 1) begin
+          // move down a row
+          frame_x <= sprite_x;
+          frame_y <= frame_y + 1;
+        end else begin
+          frame_x <= frame_x + 1;
+        end
+        spritesheet_addr <= spritesheet_addr + 1;
+      end
+    end else begin
+      if (sprite_valid) begin
+        reading <= 1;
+        sprite_ready <= 0;
+        frame_x <= sprite_x;
+        frame_y <= sprite_y;
+        spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
+      end
+    end
+  end
 
   // HDMI protocol
 
