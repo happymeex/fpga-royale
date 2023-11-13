@@ -13,6 +13,8 @@ module graphics #(
   parameter NUM_FRAMES = 512, // total number of frames across all sprites
   parameter WIDTH = 1280,
   parameter HEIGHT = 720,
+  parameter CANVAS_WIDTH = 360,
+  parameter CANVAS_HEIGHT = 720,
   parameter PALETTE_SIZE = 8
 )(
   input wire sys_rst,
@@ -20,8 +22,8 @@ module graphics #(
   input wire active_draw,
   input wire [5:0] frame_count,
   input wire sprite_valid,
-  input wire [$clog2(WIDTH)-1:0] sprite_x,
-  input wire [$clog2(HEIGHT)-1:0] sprite_y,
+  input wire [$clog2(CANVAS_WIDTH)-1:0] sprite_x,
+  input wire [$clog2(CANVAS_HEIGHT)-1:0] sprite_y,
   input wire [$clog2(NUM_FRAMES)-1:0] sprite_frame_number,
   input wire [$clog2(WIDTH)-1:0] hcount,
   input wire [$clog2(HEIGHT)-1:0] vcount,
@@ -35,16 +37,8 @@ module graphics #(
   localparam PIXELS_PER_FRAME = SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
   localparam SPRITE_MEM_DEPTH = NUM_FRAMES * SPRITE_FRAME_WIDTH * SPRITE_FRAME_HEIGHT;
   localparam PALETTE_WIDTH = $clog2(PALETTE_SIZE);
-  localparam CANVAS_PIXELS = WIDTH * HEIGHT;
+  localparam CANVAS_PIXELS = CANVAS_WIDTH * CANVAS_HEIGHT;
   logic [$clog2(SPRITE_MEM_DEPTH)-1:0] spritesheet_addr;
-
-  logic [7:0] red, green, blue; // values sent to HDMI during drawing period
-  logic [23:0] color_out;
-  //logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
-  //                   (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
-  assign red = active_draw ? color_out[23:16] : 0;
-  assign green = active_draw ? color_out[15:8] : 0;
-  assign blue = active_draw ? color_out[7:0] : 0;
 
   logic [PALETTE_WIDTH-1:0] read_color_index; // written to frame storage
   logic [PALETTE_WIDTH-1:0] color_index_1; // used to index output color
@@ -54,8 +48,18 @@ module graphics #(
   logic write_mem_1; // high when frame storage 1 is written to as storage for next frame
   logic write_mem_2 = ~write_mem_1;
 
+  logic in_canvas = hcount < CANVAS_WIDTH && vcount < CANVAS_HEIGHT;
   logic [$clog2(CANVAS_PIXELS)-1:0] output_index; // row-major order index of current (hcount, vcount)
-  assign output_index = hcount + WIDTH * vcount;
+  assign output_index = in_canvas ? hcount + CANVAS_WIDTH * vcount : 0;
+
+  logic [7:0] red, green, blue; // values sent to HDMI during drawing period
+  logic [23:0] color_out;
+  //logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
+  //                   (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
+  logic draw = active_draw && in_canvas;
+  assign red = draw ? color_out[23:16] : 0;
+  assign green = draw ? color_out[15:8] : 0;
+  assign blue = draw ? color_out[7:0] : 0;
 
   // BROM containing spritesheet
   xilinx_single_port_ram_read_first #(
@@ -95,15 +99,15 @@ module graphics #(
   // Two BRAMs for frame storage. During any given frame, one is written to,
   // the other is read from; switch roles in next frame.
 
-  logic [$clog2(WIDTH * HEIGHT)-1:0] frame_loc_ptr; // pointer for writing palette value to frame storage
-  logic [$clog2(WIDTH)-1:0] frame_x;
-  logic [$clog2(HEIGHT)-1:0] frame_y;
-  assign frame_loc_ptr = frame_y * WIDTH + frame_x; // row major order
+  logic [$clog2(CANVAS_PIXELS)-1:0] frame_loc_ptr; // pointer for writing palette value to frame storage
+  logic [$clog2(CANVAS_WIDTH)-1:0] frame_x;
+  logic [$clog2(CANVAS_HEIGHT)-1:0] frame_y;
+  assign frame_loc_ptr = frame_y * CANVAS_WIDTH + frame_x; // row major order
 
 
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(PALETTE_WIDTH),
-    .RAM_DEPTH(WIDTH * HEIGHT),
+    .RAM_DEPTH(CANVAS_PIXELS),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()
   ) frame_mem_1 (
@@ -119,7 +123,7 @@ module graphics #(
 
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(PALETTE_WIDTH),
-    .RAM_DEPTH(WIDTH * HEIGHT),
+    .RAM_DEPTH(CANVAS_PIXELS),
     .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()
   ) frame_mem_2 (
@@ -142,12 +146,12 @@ module graphics #(
     end
     if (reading) begin
       //
-      if (frame_x == sprite_x + WIDTH - 1 && frame_y == sprite_y + HEIGHT - 1) begin
+      if (frame_x == sprite_x + SPRITE_FRAME_WIDTH - 1 && frame_y == sprite_y + SPRITE_FRAME_HEIGHT - 1) begin
         // stop reading
         sprite_ready <= 1;
         reading <= 0;
       end else begin
-        if (frame_x == sprite_x + WIDTH - 1) begin
+        if (frame_x == sprite_x + SPRITE_FRAME_WIDTH - 1) begin
           // move down a row
           frame_x <= sprite_x;
           frame_y <= frame_y + 1;

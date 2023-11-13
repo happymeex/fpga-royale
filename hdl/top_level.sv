@@ -36,6 +36,8 @@ module top_level(
     .fc_out(frame_count)
   );
 
+  logic [2:0] frame_number;
+
   graphics #(
     .SPRITE_FRAME_WIDTH(192), // testing
     .SPRITE_FRAME_HEIGHT(128),
@@ -53,12 +55,38 @@ module top_level(
     .sprite_valid(1),
     .sprite_x(100),
     .sprite_y(200),
-    .sprite_frame_number(1),
+    .sprite_frame_number(frame_number),
+    .sprite_ready(),
     .hdmi_tx_p(hdmi_tx_p),
     .hdmi_tx_n(hdmi_tx_n),
     .hdmi_clk_p(hdmi_clk_p),
     .hdmi_clk_n(hdmi_clk_n)
   );
+
+logic [3:0] counter;
+logic [5:0] prev_frame_count;
+logic forward_wag;
+always_ff @(posedge clk_pixel) begin
+  prev_frame_count <= frame_count;
+  if (frame_count != prev_frame_count) begin
+    if (counter == 11) begin
+      counter <= 0;
+      if (frame_number >= 4) begin
+        forward_wag <= 0;
+        frame_number <= frame_number - 1;
+      end else if (frame_number == 0) begin
+        forward_wag <= 1;
+        frame_number <= frame_number + 1;
+      end else begin
+        if (forward_wag) frame_number <= frame_number + 1;
+        else frame_number <= frame_number - 1;
+      end
+    end else begin
+      counter <= counter + 1;
+    end
+  end
+end
+
 endmodule
 
 `default_nettype wire
