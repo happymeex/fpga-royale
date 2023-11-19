@@ -1,0 +1,4 @@
+spli s0 100 1
+spli s0 500 2
+spli s0 0 3
+spli s0 1 0
