@@ -2,3 +2,29 @@ spli s0 100 1
 spli s0 500 2
 spli s0 0 3
 spli s0 1 0
+li x0 0
+li x1 5
+li x2 50
+addi x0 x0 1 LOOP
+spsub s0 x2 2
+bne x1 x0 !LOOPIF1
+li x0 0
+spli s0 500 2
+spli s0 0 3 LOOPIF1
+spadd s0 x0 3
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+addi x0 x0 0
+jmp !LOOP
