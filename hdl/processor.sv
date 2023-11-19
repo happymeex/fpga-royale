@@ -113,6 +113,7 @@ always_ff @(posedge pixel_clk_in) begin
         end else begin
             count<=count+1;
             case ((count>INSTRUCTIONS_SIZE && !jmp) ? 0:{instruction[32],instruction[6:0]})
+
                 8'b01100111: begin //JALR
                     res<=instruction[31:20]+((rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
                             (rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
@@ -132,9 +133,32 @@ always_ff @(posedge pixel_clk_in) begin
                     wb<=0;
                     sprite<=0;
                 end
-                8'b01100011: begin //BLT
-                    if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])<
+                8'b01100011: begin //branches register
+                    case (instruction[14:12])
+                    3'b000: begin //BEQ
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])==
+                            ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                res<={instruction[31:25],instruction[11:7]};
+                                jmp<=1;
+                        end
+                        else begin
+                            instr<=((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+                            val<=((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
+                            res<= 0;
+                            jmp<=0;
+                        end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    3'b001: begin //BNE
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])!=
                             ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
                             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
                                 res<={instruction[31:25],instruction[11:7]};
@@ -144,10 +168,124 @@ always_ff @(posedge pixel_clk_in) begin
                             res<= 0;
                             jmp<=0;
                         end
-                    rdvalid<=0;
-                    rb<=0;
-                    wb<=0;
-                    sprite<=0;
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    3'b101: begin //BGE
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])>=
+                            ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                res<={instruction[31:25],instruction[11:7]};
+                                jmp<=1;
+                        end
+                        else begin
+                            res<= 0;
+                            jmp<=0;
+                        end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    //BLT
+                    3'b100: begin
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                                (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])<
+                                ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                                (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                    res<={instruction[31:25],instruction[11:7]};
+                                    jmp<=1;
+                            end
+                            else begin
+                                res<= 0;
+                                jmp<=0;
+                            end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    endcase
+                end
+                8'b11100011: begin //branches sprite NOT DONE
+                    case (instruction[13:12])
+                    3'b000: begin //SPBEQ
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])==
+                            ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                res<={instruction[31:25],instruction[11:7]};
+                                jmp<=1;
+                        end
+                        else begin
+                            instr<=((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+                            val<=((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
+                            res<= 0;
+                            jmp<=0;
+                        end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    3'b001: begin //SPBNE
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])!=
+                            ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                res<={instruction[31:25],instruction[11:7]};
+                                jmp<=1;
+                        end
+                        else begin
+                            res<= 0;
+                            jmp<=0;
+                        end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    3'b101: begin //SPBGE
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])>=
+                            ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                res<={instruction[31:25],instruction[11:7]};
+                                jmp<=1;
+                        end
+                        else begin
+                            res<= 0;
+                            jmp<=0;
+                        end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    //SPBLT
+                    3'b100: begin
+                        if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+                                (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])<
+                                ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                                (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+                                    res<={instruction[31:25],instruction[11:7]};
+                                    jmp<=1;
+                            end
+                            else begin
+                                res<= 0;
+                                jmp<=0;
+                            end
+                        rdvalid<=0;
+                        rb<=0;
+                        wb<=0;
+                        sprite<=0;
+                    end
+                    endcase
                 end
                 8'b10000011: begin //SPLW
                     res<=instruction[31:20]+((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
@@ -234,45 +372,132 @@ always_ff @(posedge pixel_clk_in) begin
                         sprite<=0;
                     
                 end
-                8'b10010011: begin //SPADDI
+                8'b10010011: begin // Sprite IMM
+                    case (instruction[14:13])
+                        3'b0:begin //SPADDI
+                                if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                    res<=(rb ? memout : res)+instruction[31:20];
+                                end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                    instr<=2;
+                                    res<=resm+instruction[31:20];
+                                end else begin
+                                    
+                                    val<=instruction[31:20];
+                                    res<=regs[instruction[19:15]]+instruction[31:20];
+                                end
+                                jmp<=0;
+                                rdvalid<=1;
+                                rb<=0;
+                                wb<=0;
+                                rd <=instruction[12:7];
+                                sprite<=1;
+                                sindex<=instruction[35:33];
+                            end
+                        3'b01: begin //SUBI not 0 floored
+                            if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                res<=(rb ? memout : res)-instruction[31:20];
+                            end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                res<=resm-instruction[31:20];
+                            end else begin
+                                res<=regs[instruction[19:15]]-instruction[31:20];
+                            end
+                            jmp<=0;
+                            rdvalid<=1;
+                            rb<=0;
+                            wb<=0;
+                            rd <=instruction[12:7];
+                            sprite<=1;
+                            sindex<=instruction[35:33];
+                        end
+                    endcase
                     
-                    if (!sprite && rdvalid && rd==instruction[19:15]) begin
-                        res<=(rb ? memout : res)+instruction[31:20];
-                    end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
-                        instr<=2;
-                        res<=resm+instruction[31:20];
-                    end else begin
-                        
-                        val<=instruction[31:20];
-                        res<=regs[instruction[19:15]]+instruction[31:20];
-                    end
-                    jmp<=0;
-                    rdvalid<=1;
-                    rb<=0;
-                    wb<=0;
-                    rd <=instruction[12:7];
-                    sprite<=1;
-                    sindex<=instruction[35:33];
                 end
-                8'b00010011: begin //ADDI
-                    
-                    if (!sprite && rdvalid && rd==instruction[19:15]) begin
-                        instr<=1;
-                        res<=(rb ? memout : res)+instruction[31:20];
-                    end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
-                        instr<=2;
-                        res<=resm+instruction[31:20];
-                    end else begin
-                        
-                        val<=instruction[31:20];
-                        res<=regs[instruction[19:15]]+instruction[31:20];
-                    end
-                    jmp<=0;
-                    rdvalid<=1;
-                    rb<=0;
-                    wb<=0;
-                    rd <=instruction[11:7];
-                    sprite<=0;
+                8'b00010011: begin //REG IMM
+                    case (instruction[14:12])
+                        3'b0:begin //ADDI
+                                if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                    res<=(rb ? memout : res)+instruction[31:20];
+                                end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                    res<=resm+instruction[31:20];
+                                end else begin
+                                    
+                                    val<=instruction[31:20];
+                                    res<=regs[instruction[19:15]]+instruction[31:20];
+                                end
+                                jmp<=0;
+                                rdvalid<=1;
+                                rb<=0;
+                                wb<=0;
+                                rd <=instruction[11:7];
+                                sprite<=0;
+                            end
+                        3'b001: begin //SUBI not 0 floored
+                            if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                res<=(rb ? memout : res)-instruction[31:20];
+                            end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                res<=resm-instruction[31:20];
+                            end else begin
+                                res<=regs[instruction[19:15]]-instruction[31:20];
+                            end
+                            jmp<=0;
+                            rdvalid<=1;
+                            rb<=0;
+                            wb<=0;
+                            rd <=instruction[11:7];
+                            sprite<=0;
+                        end
+                        3'b010:begin //Shift left
+                                if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                    res<=(rb ? memout : res)>>instruction[31:20];
+                                end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                    res<=resm>>instruction[31:20];
+                                end else begin
+                                    
+                                    val<=instruction[31:20];
+                                    res<=regs[instruction[19:15]]>>instruction[31:20];
+                                end
+                                jmp<=0;
+                                rdvalid<=1;
+                                rb<=0;
+                                wb<=0;
+                                rd <=instruction[11:7];
+                                sprite<=0;
+                            end
+                        3'b011:begin //mult
+                                if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                    res<=(rb ? memout : res)*instruction[31:20];
+                                end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                    res<=resm*instruction[31:20];
+                                end else begin
+                                    
+                                    val<=instruction[31:20];
+                                    res<=regs[instruction[19:15]]*instruction[31:20];
+                                end
+                                jmp<=0;
+                                rdvalid<=1;
+                                rb<=0;
+                                wb<=0;
+                                rd <=instruction[11:7];
+                                sprite<=0;
+                            end
+                        3'b101:begin //shift right
+                                if (!sprite && rdvalid && rd==instruction[19:15]) begin
+                                    res<=(rb ? memout : res)<<instruction[31:20];
+                                end else if (!spritem && rdmvalid && rdm==instruction[19:15]) begin
+                                    res<=resm<<instruction[31:20];
+                                end else begin
+                                    
+                                    val<=instruction[31:20];
+                                    res<=regs[instruction[19:15]]<<instruction[31:20];
+                                end
+                                jmp<=0;
+                                rdvalid<=1;
+                                rb<=0;
+                                wb<=0;
+                                rd <=instruction[11:7];
+                                sprite<=0;
+                            end
+                    endcase
                 end
                 8'b10111011: begin //attack
                         if (((sprite && rdvalid && rd==instruction[12:7] && sindex==instruction[31:29]) ?  (rb ? memout : res):
@@ -294,6 +519,43 @@ always_ff @(posedge pixel_clk_in) begin
                         rd <=instruction[12:7];
                         sprite<=1;
                         sindex<=instruction[31:29];
+                    end
+                8'b11111111: begin //dist
+                        res<=(((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[35:33]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[35:33]) ? resm : sprites[instruction[18:13]][instruction[35:33]])>=
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[35:33]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[35:33]) ? resm : sprites[instruction[24:19]][instruction[35:33]]) ? 
+                            ((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[35:33]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[35:33]) ? resm : sprites[instruction[18:13]][instruction[35:33]])-
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[35:33]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[35:33]) ? resm : sprites[instruction[24:19]][instruction[35:33]]):
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[35:33]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[35:33]) ? resm : sprites[instruction[24:19]][instruction[35:33]])-
+                            ((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[35:33]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[35:33]) ? resm : sprites[instruction[18:13]][instruction[35:33]])
+                            
+                            ) +
+                            (((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[31:29]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[31:29]) ? resm : sprites[instruction[18:13]][instruction[31:29]])>=
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[31:29]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[31:29]) ? resm : sprites[instruction[24:19]][instruction[31:29]]) ? 
+                            ((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[31:29]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[31:29]) ? resm : sprites[instruction[18:13]][instruction[31:29]])-
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[31:29]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[31:29]) ? resm : sprites[instruction[24:19]][instruction[31:29]]):
+                            ((sprite && rdvalid && rd==instruction[24:19] && sindex==instruction[31:29]) ? (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[24:19] && sindexm==instruction[31:29]) ? resm : sprites[instruction[24:19]][instruction[31:29]])-
+                            ((sprite && rdvalid && rd==instruction[18:13] && sindex==instruction[31:29]) ?  (rb ? memout : res):
+                            (spritem && rdmvalid && rdm==instruction[18:13] && sindexm==instruction[31:29]) ? resm : sprites[instruction[18:13]][instruction[31:29]])
+                            );
+                        instr<=rdm;
+                        val<=spritem;
+                        jmp<=0;
+                        rdvalid<=1;
+                        rb<=0;
+                        wb<=0;
+                        rd <=instruction[11:7];
+                        sprite<=0;
                     end
                 8'b10110011: begin //SPSUB SPADD ADDSP SUBSP
                     case (instruction[31:25]) 
@@ -366,9 +628,10 @@ always_ff @(posedge pixel_clk_in) begin
                     end
                     endcase
                 end
-                8'b00110011: begin //SUB ADD
+                8'b00110011: begin //SUB ADD MULT SLL 
+                    val<=12;
                     case (instruction[31:25]) 
-                    7'b0100000: begin //SUB
+                    7'b0000001: begin //SUB
                         if (((!sprite && rdvalid && rd==instruction[19:15]) ?  (rb ? memout : res):
                             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])<
                             ((!sprite && rdvalid && rd==instruction[24:20]) ? (rb ? memout : res):
@@ -401,6 +664,44 @@ always_ff @(posedge pixel_clk_in) begin
                         rd <=instruction[11:7];
                         sprite<=0;
                     end
+                    7'b0000010: begin //SLL
+                        res<= ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])
+                            << ((!sprite && rdvalid && rd==instruction[24:20]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+                        jmp<=0;
+                        instr<=1;
+                        rdvalid<=1;
+                        rb<=0;
+                        wb<=0;
+                        rd <=instruction[11:7];
+                        sprite<=0;
+                    end
+                    7'b0000011: begin //MULT
+                        res<= ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])
+                            * ((!sprite && rdvalid && rd==instruction[24:20]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+                        jmp<=0;
+                        rdvalid<=1;
+                        rb<=0;
+                        wb<=0;
+                        rd <=instruction[11:7];
+                        sprite<=0;
+                    end
+                    7'b0000100: begin //SRL
+                        res<= ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])
+                            >> ((!sprite && rdvalid && rd==instruction[24:20]) ? (rb ? memout : res):
+                            (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+                        jmp<=0;
+                        instr<=2;
+                        rdvalid<=1;
+                        rb<=0;
+                        wb<=0;
+                        rd <=instruction[11:7];
+                        sprite<=0;
+                    end
                     endcase
                 end
                 default: begin //if everything is done
@@ -416,7 +717,6 @@ always_ff @(posedge pixel_clk_in) begin
             //Mem
             rdmvalid<=rdvalid;
             spritem<=sprite;
-                    
             if (rdvalid) begin
                 if (sprite) begin
                     sindexm<=sindex;
