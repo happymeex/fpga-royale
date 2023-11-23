@@ -67,6 +67,7 @@ module processor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parameter NU
   logic rdvalid;
   logic rb;
   logic wb;
+  logic [31:0] cinstr;
   logic [6:0] instr;
   initial rb=0;
   initial wb=0;
@@ -157,9 +158,20 @@ always_ff @(posedge pixel_clk_in) begin
                 rd<=instruction[11:7];
                 jmp<=1;
                 rdvalid<=1;
+                cinstr<=count;
                 rb<=1;
                 wb<=0;
                 nop<=2;
+                sprite<=0;
+            end
+            8'b01101111: begin //JAL
+                res<=instruction[31:12];
+                rd<=instruction[11:7];
+                jmp<=1;
+                rdvalid<=1;
+                cinstr<=count;
+                rb<=0;
+                wb<=0;
                 sprite<=0;
             end
             8'b01100001: begin //JMP
@@ -378,9 +390,29 @@ always_ff @(posedge pixel_clk_in) begin
                 nop<=2;
                 sprite<=0;
             end
+            8'b01111111: begin //wait
+                jmp<=0;
+                rdvalid<=0;
+                rb<=0;
+                wb<=0;
+                count<=count;
+                nop<=instruction[31:7];
+                sprite<=0;
+            end
             8'b10110111: begin  //SPLI
                 res<=instruction[31:13];
                 rd <=instruction[12:7];
+                jmp<=0;
+                rdvalid<=1;
+                rb<=0;
+                wb<=0;
+                sprite<=1;
+                sindex<=instruction[35:33];
+            end
+            8'b10000001: begin  //SPLREG
+                res<=((!sprite && rdvalid && rd==instruction[11:7]) ? (rb ? memout : res):
+                        (!spritem && rdmvalid && rdm==instruction[11:7]) ? resm : regs[instruction[11:7]]);
+                rd <=instruction[17:12];
                 jmp<=0;
                 rdvalid<=1;
                 rb<=0;
@@ -770,10 +802,13 @@ always_ff @(posedge pixel_clk_in) begin
             if (!rb) begin
                 count<=res;
                 rd<=0;
-                
+                if (rdvalid) begin
+                    resm<=cinstr;
+                end
             end else begin
                 count<=memout;
-                resm<=memout+1; //link register to nxt instructino
+                resm<=cinstr; //link register to nxt instruction
+            //    resm<=memout+1; //link register to nxt instructino
             end
             jmp<=0;
             rb<=0;    

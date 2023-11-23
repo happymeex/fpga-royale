@@ -50,8 +50,10 @@ instructions={
     "sw":"0100011",
     "li":"0110111",
     "spli":"0110111",
+    "splreg":"0000001",
     "lisp":"0111111",
     "dist":"1111111",
+    "wait":"1111111",
     "spaddi":"0010011",
     "spsubi":"0010011",
     "addi":"0010011",
@@ -108,31 +110,42 @@ branchinstr={
 count=0;
 loops={}
 INSTRUCTION_SIZE=9
-lines=x.readlines();
-for line in lines:
+lines1=x.readlines();
+lines=[]
+for line in lines1:
         words=line.rstrip("\n").split(" ");
         words=[word.strip(",") for word in words]
-        if (words[-1][:4]=="LOOP"):
-            loops[words[-1]]=count
-        count+=1
+      #  if (words[-1][:4]=="LOOP"):
+       #     loops[words[-1]]=count
+        if (len(words)==1):
+            loops[words[0]]=count;
+        else:
+            lines.append(" ".join(words))
+            count+=1
 print(loops)
+print("count:",count)
 with open('data/instructions.mem', 'w') as f:
     for line in lines:
         words=line.rstrip("\n").split(" ");
         words=[word.strip(",") for word in words]
+        words[0]=words[0].lower();
      #   if (words[-1][:4]=="LOOP"):
       #      words.pop()
        # if(True):
         if (words[0]=="jmp"):
-            words[1]=words[1][1:] #first char is !
+            #words[1]=words[1][1:] #first char is !
             if (words[1] not in loops):
                 raise Exception("loop not found: ",words[1])
             f.write(tohex(binary(loops[words[1]],25)+"1100001",INSTRUCTION_SIZE)+"\n")
+        elif (words[0]=="wait"):
+            f.write(tohex("0000"+binary(words[1],25)+"1111111",INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="jal"):
-            offset=words[2]
+            loop=words[2]
+            if (loop not in loops):
+                raise Exception("loop not found: ",words[1])
             if words[1] not in registers:
                 raise Exception("syntax error register not present: ",words[1])
-            f.write(tohex(binary(offset,20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex("0000"+binary(loops[loop],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="splw" or words[0]=="spsw"):
             rs1=words[2][words[2].find("(")+1:-1]
             offset=words[2][:words[2].find("(")]
@@ -149,6 +162,10 @@ with open('data/instructions.mem', 'w') as f:
             if words[1] not in registers:
                 raise Exception("syntax error register not present")
             f.write(tohex(binary(words[2],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+        elif (words[0]=="splreg"):
+            if words[1] not in sprites or words[2] not in registers:
+                raise Exception("syntax error register not present")
+            f.write(tohex(binary(words[3],3)+"1"+binary("0",14)+sprites[words[1]]+registers[words[2]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spli"):
             if words[1] not in sprites:
                 raise Exception("syntax error register not present")
@@ -191,7 +208,7 @@ with open('data/instructions.mem', 'w') as f:
         #         raise Exception("syntax error register not present")
         #     f.write(tohex("0100000"+registers[words[3]]+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="beq" or words[0]=="bne" or words[0]=="bge" or words[0]=="blt"):
-            words[3]=words[3][1:] #first char is !
+            #words[3]=words[3][1:] #first char is !
             if (words[3] not in loops):
                 raise Exception("loop not found: ",words[3])
             loop=binary(loops[words[3]],12)

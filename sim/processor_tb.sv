@@ -4,13 +4,28 @@
 module processor_tb;
 
     //make logics for inputs and outputs!
-  localparam  INSTRUCTIONS_SIZE=20;
+  localparam  INSTRUCTIONS_SIZE=13;
   logic pixel_clk_in;
   logic rst_in;
-  processor #(.INSTRUCTIONS_SIZE(INSTRUCTIONS_SIZE), .MAX_SPRITES(2),.MEMORY_SIZE(256),.INSTRUCTION_WIDTH(36),.ROW_SIZE(1720))
+  logic new_frame;
+  initial new_frame=0;
+  localparam CANVAS_WIDTH=100;
+  localparam CANVAS_HEIGHT=100;
+  localparam NUM_FRAMES=100;
+  logic[$clog2(CANVAS_WIDTH)-1:0] x;
+  logic[$clog2(CANVAS_HEIGHT)-1:0] y;
+  logic [$clog2(NUM_FRAMES)-1:0] frame;
+  logic sprite_valid;
+  processor #(.CANVAS_WIDTH(CANVAS_WIDTH),.CANVAS_HEIGHT(CANVAS_HEIGHT), .NUM_FRAMES(NUM_FRAMES),
+    .INSTRUCTIONS_SIZE(INSTRUCTIONS_SIZE), .MAX_SPRITES(2),.MEMORY_SIZE(256),.INSTRUCTION_WIDTH(36),.ROW_SIZE(1720))
             uut
             ( .pixel_clk_in(pixel_clk_in),
-              .rst_in(rst_in)
+              .rst_in(rst_in),
+              .new_frame(new_frame),
+              .x(x),
+              .y(y),
+              .frame(frame),
+              .sprite_valid(sprite_valid)
             );
     always begin
         #5;  //every 5 ns switch...so period of clock is 10 ns...100 MHz clock
@@ -33,7 +48,7 @@ module processor_tb;
         $display("Starting Sim"); //print nice message
         pixel_clk_in = 0; //initialize clk (super important)
         rst_in = 0; //initialize rst (super important)
-        for (int i=0;i<INSTRUCTIONS_SIZE*4;i++)begin
+        for (int i=0;i<INSTRUCTIONS_SIZE*1000;i++)begin
           #10;
         end
         #100;
