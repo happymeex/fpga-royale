@@ -45,7 +45,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   //elixir count
   logic [3:0] elixir;
   //all sprites
-  logic[31:0] sprites[63:0][7:0];
+  logic[31:0] sprites[5:0][7:0];
   initial begin
     for (int i = 0 ; i < 64; i++) begin
         sprites[i][0] = 0;

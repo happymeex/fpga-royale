@@ -45,10 +45,9 @@ files = ["final.bit",
          "post_route_power.rpt",
          "post_imp_drc.rpt",
          ]
-
 for file in files:
-    # look for out.bit, because we've hard coded that for now i guess
-    if not os.access(f"obj/{file}", os.R_OK):
-        raise VivadoBuildError(
-            f"vivado exited successfully, but no {file} generated")
-    save(f"obj/{file}")
+  # look for out.bit, because we've hard coded that for now i guess
+  print(f"saving {file}")
+  if not os.access(f"obj/{file}", os.R_OK):
+    raise VivadoBuildError(f"vivado exited successfully, but no {file} generated")
+  save(f"obj/{file}")

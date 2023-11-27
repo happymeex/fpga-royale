@@ -10,7 +10,5 @@ bne x1 x0 LOOPIF1
 li x0 0 
 LOOPIF1
 splreg s0 x0 3 
-jmp HI
-HI
-wait 100
-jal x2 LOOP
+wait 10000000
+jmp LOOP

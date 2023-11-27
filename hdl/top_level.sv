@@ -32,11 +32,11 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
-  processor #(
+  singleprocessor #(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
     .NUM_FRAMES(NUM_FRAMES),
-    .INSTRUCTIONS_SIZE(200),
+    .INSTRUCTIONS_SIZE(11),
     .MAX_SPRITES(64),
     .MEMORY_SIZE(100),
     .INSTRUCTION_WIDTH(36),
