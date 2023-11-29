@@ -38,14 +38,14 @@
 //   assign frame = frame_;
 //   assign sprite_valid = sprite_valid_;
   
-//   logic [31:0] regs[31:0];
+//   logic [31:0] regs[4:0];
 //   logic[6:0] state;
 //   initial state=0;
   
 //   //elixir count
 //   logic [3:0] elixir;
 //   //all sprites
-//   logic[31:0] sprites[63:0][7:0];
+//   logic[31:0] sprites[5:0][7:0];
 //   initial begin
 //     for (int i = 0 ; i < 64; i++) begin
 //         sprites[i][0] = 0;
@@ -54,7 +54,7 @@
 //   logic [31:0] count;
 //   logic done;
 //   logic [INSTRUCTION_WIDTH-1:0] instruction;
-//   logic [31:0] nop;
+//   logic [20:0] nop;
 //   logic[31:0] val;
 //   initial nop=1;
 //   initial count=0;
@@ -259,83 +259,83 @@
 //                 end
 //                 endcase
 //             end
-//             8'b11100011: begin //branches sprite NOT DONE
-//                 case (instruction[13:12])
-//                 3'b000: begin //SPBEQ
-//                     if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])==
-//                         ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
-//                             res<={instruction[31:25],instruction[11:7]};
-//                             jmp<=1;
-//                     end
-//                     else begin
-//                         instr<=((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
-//                         val<=((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
-//                         res<= 0;
-//                         jmp<=0;
-//                     end
-//                     rdvalid<=0;
-//                     rb<=0;
-//                     wb<=0;
-//                     sprite<=0;
-//                 end
-//                 3'b001: begin //SPBNE
-//                     if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])!=
-//                         ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
-//                             res<={instruction[31:25],instruction[11:7]};
-//                             jmp<=1;
-//                     end
-//                     else begin
-//                         res<= 0;
-//                         jmp<=0;
-//                     end
-//                     rdvalid<=0;
-//                     rb<=0;
-//                     wb<=0;
-//                     sprite<=0;
-//                 end
-//                 3'b101: begin //SPBGE
-//                     if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])>=
-//                         ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
-//                         (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
-//                             res<={instruction[31:25],instruction[11:7]};
-//                             jmp<=1;
-//                     end
-//                     else begin
-//                         res<= 0;
-//                         jmp<=0;
-//                     end
-//                     rdvalid<=0;
-//                     rb<=0;
-//                     wb<=0;
-//                     sprite<=0;
-//                 end
-//                 //SPBLT
-//                 3'b100: begin
-//                     if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
-//                             (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])<
-//                             ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
-//                             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
-//                                 res<={instruction[31:25],instruction[11:7]};
-//                                 jmp<=1;
-//                         end
-//                         else begin
-//                             res<= 0;
-//                             jmp<=0;
-//                         end
-//                     rdvalid<=0;
-//                     rb<=0;
-//                     wb<=0;
-//                     sprite<=0;
-//                 end
-//                 endcase
-//             end
+//             // 8'b11100011: begin //branches sprite NOT DONE
+//             //     case (instruction[13:12])
+//             //     3'b000: begin //SPBEQ
+//             //         if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])==
+//             //             ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+//             //                 res<={instruction[31:25],instruction[11:7]};
+//             //                 jmp<=1;
+//             //         end
+//             //         else begin
+//             //             instr<=((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]]);
+//             //             val<=((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
+//             //             res<= 0;
+//             //             jmp<=0;
+//             //         end
+//             //         rdvalid<=0;
+//             //         rb<=0;
+//             //         wb<=0;
+//             //         sprite<=0;
+//             //     end
+//             //     3'b001: begin //SPBNE
+//             //         if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])!=
+//             //             ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+//             //                 res<={instruction[31:25],instruction[11:7]};
+//             //                 jmp<=1;
+//             //         end
+//             //         else begin
+//             //             res<= 0;
+//             //             jmp<=0;
+//             //         end
+//             //         rdvalid<=0;
+//             //         rb<=0;
+//             //         wb<=0;
+//             //         sprite<=0;
+//             //     end
+//             //     3'b101: begin //SPBGE
+//             //         if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])>=
+//             //             ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+//             //             (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+//             //                 res<={instruction[31:25],instruction[11:7]};
+//             //                 jmp<=1;
+//             //         end
+//             //         else begin
+//             //             res<= 0;
+//             //             jmp<=0;
+//             //         end
+//             //         rdvalid<=0;
+//             //         rb<=0;
+//             //         wb<=0;
+//             //         sprite<=0;
+//             //     end
+//             //     //SPBLT
+//             //     3'b100: begin
+//             //         if (((!sprite && rdvalid && rd==instruction[24:20]) ?  (rb ? memout : res):
+//             //                 (!spritem && rdmvalid && rdm==instruction[24:20]) ? resm : regs[instruction[24:20]])<
+//             //                 ((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
+//             //                 (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]])) begin //take it
+//             //                     res<={instruction[31:25],instruction[11:7]};
+//             //                     jmp<=1;
+//             //             end
+//             //             else begin
+//             //                 res<= 0;
+//             //                 jmp<=0;
+//             //             end
+//             //         rdvalid<=0;
+//             //         rb<=0;
+//             //         wb<=0;
+//             //         sprite<=0;
+//             //     end
+//             //     endcase
+//             // end
 //             8'b10000011: begin //SPLW
 //                 res<=instruction[31:20]+((!sprite && rdvalid && rd==instruction[19:15]) ? (rb ? memout : res):
 //                         (!spritem && rdmvalid && rdm==instruction[19:15]) ? resm : regs[instruction[19:15]]);
