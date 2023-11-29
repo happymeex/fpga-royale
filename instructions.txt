@@ -5,7 +5,7 @@ spli x2 0 3
 spli x2 1 0
 li x0 0
 li x1 5
-li x6 5
+li x6 1
 LOOP
 addi x0 x0 1
 bne x1 x0 LOOPIF1
@@ -13,9 +13,9 @@ li x0 0
 LOOPIF1
 splreg x2 x0 3
 wait 20000000
-spli x2 300 2
 wait 20000000
-spli x2 100 2
 wait 20000000
-spli x2 500 2
+wait 20000000
+wait 20000000
+spsubi x2 1 2
 jmp LOOP
