@@ -139,6 +139,8 @@ module graphics #(
 
   // the good stuff oh yeAH mhm
   logic [5:0] prev_frame_count;
+  logic [$clog2(CANVAS_WIDTH)-1:0] store_sprite_x;
+  logic [$clog2(CANVAS_HEIGHT)-1:0] store_sprite_y;
   always_ff @(posedge clk_pixel) begin
     prev_frame_count <= frame_count;
     if (frame_count != prev_frame_count) begin
@@ -146,14 +148,14 @@ module graphics #(
     end
     if (reading) begin
       //
-      if (frame_x == sprite_x + SPRITE_FRAME_WIDTH - 1 && frame_y == sprite_y + SPRITE_FRAME_HEIGHT - 1) begin
+      if (frame_x == store_sprite_x + SPRITE_FRAME_WIDTH - 1 && frame_y == store_sprite_y + SPRITE_FRAME_HEIGHT - 1) begin
         // stop reading
         sprite_ready <= 1;
         reading <= 0;
       end else begin
-        if (frame_x == sprite_x + SPRITE_FRAME_WIDTH - 1) begin
+        if (frame_x == store_sprite_x + SPRITE_FRAME_WIDTH - 1) begin
           // move down a row
-          frame_x <= sprite_x;
+          frame_x <= store_sprite_x;
           frame_y <= frame_y + 1;
         end else begin
           frame_x <= frame_x + 1;
@@ -166,6 +168,8 @@ module graphics #(
         sprite_ready <= 0;
         frame_x <= sprite_x;
         frame_y <= sprite_y;
+        store_sprite_x <= sprite_x;
+        store_sprite_y <= sprite_y;
         spritesheet_addr <= sprite_frame_number * PIXELS_PER_FRAME;
       end
     end
