@@ -107,25 +107,33 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .regcea(1),   // Output register enable
     .douta(oldinstruction)      // RAM output data, width determined from RAM_WIDTH
   );
+logic [31:0] counter;
 always_ff @(posedge pixel_clk_in) begin
     if(new_frame) begin
         state<=0;
+        counter<=0;
     end
     if (state<64) begin
       // sprite_valid_ <= sprites[state<<3] != 0 && state==0;
-        //if (sprites[state<<3]>0) begin
-        if (state==0) begin
-            x_<=0;
-            y_<=0;
-            frame_<=3;
+        if (sprites[state<<3]>0) begin
+       // if (state==0) begin
+            x_<=sprites[(state<<3)+1];
+            y_<=sprites[(state<<3)+2];
+         //   x_<=100;
+          //  y_<=500;
+            frame_<=sprites[(state<<3)+3];
             sprite_valid_<=1;
         end else begin
-            x_<=0;
-            y_<=0;
-            frame_<=0;
+           // x_<=0;
+           // y_<=0;
+           // frame_<=0;
             sprite_valid_<=0;
         end
-        state<=state+1;
+        //counter<=counter+1;
+        //if (counter>50) begin
+         // counter<=0;
+          state<=state+1;
+        //end
     end
     else begin
         sprite_valid_<=0;
