@@ -1,14 +1,19 @@
-spli s0 100 1
-spli s0 500 2
-spli s0 0 3
-spli s0 1 0
+li x2 0
+spli x2 100 1
+spli x2 500 2
+spli x2 0 3
+spli x2 1 0
 li x0 0
 li x1 5
+li x6 5
 LOOP
-addi x0 x0 1
-bne x1 x0 LOOPIF1
-li x0 0 
-LOOPIF1
-splreg s0 x0 3 
-wait 10000000
+//addi x0 x0 1
+//bne x1 x0 LOOPIF1
+//li x0 0 
+//LOOPIF1
+//beq x0 x6 LOOPDONE
+//splreg x2 x0 3
+//wait 20000000
 jmp LOOP
+//LOOPDONE
+//spli x2 5 3

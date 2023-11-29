@@ -5,7 +5,7 @@ def binary(x,length):
         for i in range(length-len(ret)):
             ret="0"+ret;
     elif (len(ret)>length):
-        raise Exception("number too large");
+        raise Exception("number too large",ret,len(ret));
     return ret;
 def tohex(x,length):
     ret=str(hex(int(x, 2)))[2:]
@@ -87,8 +87,8 @@ immediateinstr={
     "slli":"010",
     "multi":"011",
     "srli":"101",
-    "spsubi":"01",
-    "spaddi":"00",
+    "spsubi":"001",
+    "spaddi":"000",
 }
 regreginstr={
     "add":"0000000",
@@ -146,12 +146,12 @@ with open('data/instructions.mem', 'w') as f:
             if words[1] not in registers:
                 raise Exception("syntax error register not present: ",words[1])
             f.write(tohex("0000"+binary(loops[loop],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
-        elif (words[0]=="splw" or words[0]=="spsw"):
-            rs1=words[2][words[2].find("(")+1:-1]
-            offset=words[2][:words[2].find("(")]
-            if words[1] not in sprites or rs1 not in registers:
-                raise Exception("syntax error register not present: ",rs1)
-            f.write(tohex(binary(words[3],3)+"1"+binary(offset,12)+registers[rs1]+"01"+sprites[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+        # elif (words[0]=="splw" or words[0]=="spsw"):
+        #     rs1=words[2][words[2].find("(")+1:-1]
+        #     offset=words[2][:words[2].find("(")]
+        #     if words[1] not in registers or rs1 not in registers:
+        #         raise Exception("syntax error register not present: ",rs1)
+        #     f.write(tohex(binary(words[3],3)+"1"+binary(offset,12)+registers[rs1]+"01"+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="lw" or words[0]=="sw" or words[0]=="jalr"):
             rs1=words[2][words[2].find("(")+1:-1]
             offset=words[2][:words[2].find("(")]
@@ -163,42 +163,42 @@ with open('data/instructions.mem', 'w') as f:
                 raise Exception("syntax error register not present")
             f.write(tohex(binary(words[2],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="splreg"):
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register not present")
-            f.write(tohex(binary(words[3],3)+"1"+binary("0",14)+sprites[words[1]]+registers[words[2]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+binary("0",15)+registers[words[1]]+registers[words[2]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spli"):
-            if words[1] not in sprites:
+            if words[1] not in registers:
                 raise Exception("syntax error register not present")
-            f.write(tohex(binary(words[3],3)+"1"+binary(words[2],19)+sprites[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+binary(words[2],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="lisp"):
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[3],3)+"1"+binary("0",12)+sprites[words[1]]+"00"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+binary("0",12)+registers[words[1]]+"000"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spaddi" or words[0]=="spsubi"):
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[4],3)+"1"+binary(words[3],12)+registers[words[2]]+immediateinstr[words[0]]+sprites[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[4],3)+"1"+binary(words[3],12)+registers[words[2]]+immediateinstr[words[0]]+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="addi" or words[0]=="subi" or words[0]=="slli" or words[0]=="multi" or
               words[0]=="srli"):
             if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register not present")
             f.write(tohex(binary(words[3],12)+registers[words[2]]+immediateinstr[words[0]]+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spadd"):
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[3],3)+"1"+binary("0",12)+registers[words[2]]+"00"+sprites[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+binary("0",12)+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="addsp"):#destionation is register
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[3],3)+"1"+"000000100000"+sprites[words[1]]+"00"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+"000000100000"+registers[words[1]]+"000"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="subsp"): #destination is register
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[3],3)+"1"+"010000100000"+sprites[words[1]]+"00"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+"010000100000"+registers[words[1]]+"000"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spsub"):
-            if words[1] not in sprites or words[2] not in registers:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[3],3)+"1"+"010000000000"+registers[words[2]]+"00"+sprites[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[3],3)+"1"+"010000000000"+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="add" or words[0]=="sub" or words[0]=="sll" or words[0]=="mult" or words[0]=="srl"):
             if words[1] not in registers or words[2] not in registers or words[3] not in registers:
                 raise Exception("syntax error register not present")
@@ -224,11 +224,11 @@ with open('data/instructions.mem', 'w') as f:
                 raise Exception("syntax error register not present")
             f.write(tohex("0001"+loop[0:7]+registers[words[1]]+registers[words[2]]+branchinstr[words[0]]+loop[7:12] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="attack"):
-            if words[1] not in sprites or words[2] not in sprites:
+            if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex("0001"+binary(words[3],3)+binary(words[4],3)+binary("0",6)+sprites[words[2]]+"0"+sprites[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex("0001"+binary(words[3],3)+binary(words[4],3)+binary("0",6)+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=='dist'):
-            if (words[1] not in sprites or words[2] not in sprites or words[3] not in registers):
+            if (words[1] not in registers or words[2] not in registers or words[3] not in registers):
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[4],3)+"1"+binary(words[5],3)+binary("0",4)+sprites[words[1]]+sprites[words[2]] +"0"+ registers[words[3]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[4],3)+"1"+binary(words[5],3)+binary("0",4)+registers[words[1]]+registers[words[2]] +"0"+ registers[words[3]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
 
