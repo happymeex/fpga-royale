@@ -1,3 +1,7 @@
+assemble:
+	python3 ./removewhitespace.py
+	python3 ./assembler.py
+
 build:
 	./remote/r.py build.py build.tcl hdl/* xdc/top_level.xdc data/* obj/
 

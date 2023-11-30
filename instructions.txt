@@ -17,5 +17,5 @@ wait 20000000
 wait 20000000
 wait 20000000
 wait 20000000
-spsubi x2 1 2
+spsub x2 x6 2
 jmp LOOP
