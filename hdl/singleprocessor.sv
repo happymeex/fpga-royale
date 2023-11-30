@@ -40,6 +40,8 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   logic [INSTRUCTION_WIDTH-1:0] oldinstruction;
   logic [31:0] r1;
   logic [31:0] r2;
+  logic [31:0] r3;
+  logic [31:0] r4;
   logic [31:0] regs[31:0];
   logic[31:0] state;
   initial state=0;
@@ -124,16 +126,13 @@ always_ff @(posedge pixel_clk_in) begin
             frame_<=sprites[(state<<3)+3];
             sprite_valid_<=1;
         end else begin
-           // x_<=0;
-           // y_<=0;
-           // frame_<=0;
             sprite_valid_<=0;
         end
-        //counter<=counter+1;
-        //if (counter>50) begin
-         // counter<=0;
+        counter<=counter+1;
+        if (counter>40000) begin
+          counter<=0;
           state<=state+1;
-        //end
+        end
     end
     else begin
         sprite_valid_<=0;
@@ -148,7 +147,6 @@ always_ff @(posedge pixel_clk_in) begin
                 if (rb) begin
                     regs[rd]<=memout;
                 end else if (wsprite) begin
-                    instr<=res;
                     sprites[(rd<<3)+sindex]<=res;
                 end else if (rdvalid) begin
                     regs[rd]<=res;
@@ -230,7 +228,6 @@ always_ff @(posedge pixel_clk_in) begin
             8'b10111111: begin //LISP
                 rd<=oldinstruction[11:7];
                 r1<=sprites[(regs[oldinstruction[19:15]]<<3)+oldinstruction[35:33]];
-                instr<=(regs[oldinstruction[19:15]]<<3)+oldinstruction[35:33];
                 rb<=0;
                 wb<=0;
                 wsprite<=0;
@@ -280,8 +277,15 @@ always_ff @(posedge pixel_clk_in) begin
                     rdvalid<=0;
                 end
             8'b11111111: begin //dist
-               //     rd<=olinstruction[11:7];
-                 //   r1<=sprites[regs[oldinstruction[18:13]][instruction[35:33]]
+                    rd<=oldinstruction[11:7];
+                    r1<=sprites[(regs[oldinstruction[19:15]]<<3)+oldinstruction[35:33]];
+                    r2<=sprites[(regs[oldinstruction[24:20]]<<3)+oldinstruction[35:33]];
+                    r3<=sprites[(regs[oldinstruction[19:15]]<<3)+oldinstruction[31:29]];
+                    r4<=sprites[(regs[oldinstruction[24:20]]<<3)+oldinstruction[31:29]];
+                    rb<=0;
+                    wb<=0;
+                    wsprite<=0;
+                    rdvalid<=1;
                     // regs[instruction[11:7]]<=(sprites[instruction[18:13]][instruction[35:33]]>=sprites[instruction[24:19]][instruction[35:33]]?
                     //                             sprites[instruction[18:13]][instruction[35:33]]-sprites[instruction[24:19]][instruction[35:33]]:
                     //                             sprites[instruction[24:19]][instruction[35:33]]-sprites[instruction[18:13]][instruction[35:33]])+
@@ -317,12 +321,11 @@ always_ff @(posedge pixel_clk_in) begin
                     //     );
              //       jmp<=0;
                   //  rdvalid<=1;
-                    rb<=0;
-                    wb<=0;
+         //           rb<=0;
+           //         wb<=0;
                 end
             8'b10110011: begin //SPSUB SPADD ADDSP SUBSP
                 val<=oldinstruction[31:25];
-                instr<=21;
                 case (oldinstruction[31:25]) 
                 7'b0100000: begin //SPSUB (destination is sprite)
                     
@@ -365,15 +368,15 @@ always_ff @(posedge pixel_clk_in) begin
                 end
                 endcase
             end
-            8'b00110011: begin //SUB ADD MULT SLL 
+            8'b00110011: begin //SUB ADD MULT SLL ABS
                 rd<=oldinstruction[11:7];
                     
-                    r1<=regs[oldinstruction[19:15]];
-                    r2<=regs[oldinstruction[24:20]];
-                    rb<=0;
-                    wb<=0;
-                    wsprite<=0;
-                    rdvalid<=1;
+                r1<=regs[oldinstruction[19:15]];
+                r2<=regs[oldinstruction[24:20]];
+                rb<=0;
+                wb<=0;
+                wsprite<=0;
+                rdvalid<=1;
             end
             default: begin //if everything is done
                 rd<=0;
@@ -399,7 +402,6 @@ always_ff @(posedge pixel_clk_in) begin
                         count<={instruction[31:25],instruction[11:7]};
                         nop<=2;
                     end else begin
-                        instr<=11;
                         readstage<=1;
                         count<=count+1;
                     end
@@ -518,6 +520,8 @@ always_ff @(posedge pixel_clk_in) begin
                     nop<=1;
                 end
             8'b11111111: begin //dist
+                res<=(r1>=r2 ? r1-r2: r2-r1) +(r3>=r4 ? r3-r4: r4-r3);
+                nop<=1;
                     // regs[instruction[11:7]]<=(sprites[instruction[18:13]][instruction[35:33]]>=sprites[instruction[24:19]][instruction[35:33]]?
                     //                             sprites[instruction[18:13]][instruction[35:33]]-sprites[instruction[24:19]][instruction[35:33]]:
                     //                             sprites[instruction[24:19]][instruction[35:33]]-sprites[instruction[18:13]][instruction[35:33]])+
@@ -576,7 +580,7 @@ always_ff @(posedge pixel_clk_in) begin
                 end
                 endcase
             end
-            8'b00110011: begin //SUB ADD MULT SLL 
+            8'b00110011: begin //SUB ADD MULT SLL ABS
                 val<=12;
                 case (instruction[31:25]) 
                 7'b0000001: begin //SUB
@@ -588,16 +592,20 @@ always_ff @(posedge pixel_clk_in) begin
                     res<=r1+r2;
                     nop<=1;
                 end
-                7'b0000010: begin //SLL NOT DONE
+                7'b0000010: begin //SLL
                     res<=r1<<r2;
                     nop<=1;
                end
-                7'b0000011: begin //MULT NOT DONE
+                7'b0000011: begin //MULT
                     res<=r1*r2;
                     nop<=1;
                 end
-                7'b0000100: begin //SRL NOT DONE
+                7'b0000100: begin //SRL 
                     res<=r1>>r2;
+                    nop<=1;
+                end
+                7'b0000101: begin //ABS 
+                    res<=r1>r2? r1-r2: r2-r1;
                     nop<=1;
                 end
                 endcase
