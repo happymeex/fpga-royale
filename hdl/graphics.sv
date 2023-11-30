@@ -104,7 +104,15 @@ module graphics #(
   logic [$clog2(CANVAS_HEIGHT)-1:0] frame_y;
   assign frame_loc_ptr = frame_y * CANVAS_WIDTH + frame_x; // row major order
 
+  logic is_transparent = read_color_index == 0; // true if current pixel being read from spritesheet is transparent
 
+  logic wea1;
+  assign wea1 = write_mem_1 && reading && !is_transparent || !write_mem_1;
+  logic [PALETTE_WIDTH-1:0] dina1;
+  always_comb begin
+    if (write_mem_1 && reading) dina1 = read_color_index;
+    else dina1 = PALETTE_SIZE - 1;
+  end
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(PALETTE_WIDTH),
     .RAM_DEPTH(CANVAS_PIXELS),
@@ -112,15 +120,22 @@ module graphics #(
     .INIT_FILE()
   ) frame_mem_1 (
     .addra(write_mem_1 ? frame_loc_ptr : output_index),
-    .dina(read_color_index),       // RAM input data, width determined from RAM_WIDTH
+    .dina(dina1),       // RAM input data, width determined from RAM_WIDTH
     .clka(clk_pixel),
-    .wea(write_mem_1 && reading),
+    .wea(wea1),
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
     .douta(color_index_1)      // RAM output data, width determined from RAM_WIDTH
   );
 
+  logic wea2;
+  assign wea2 = write_mem_2 && reading && !is_transparent || !write_mem_2;
+  logic [PALETTE_WIDTH-1:0] dina2;
+  always_comb begin
+    if (write_mem_2 && reading) dina2 = read_color_index;
+    else dina2 = PALETTE_SIZE - 1;
+  end
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(PALETTE_WIDTH),
     .RAM_DEPTH(CANVAS_PIXELS),
@@ -128,9 +143,9 @@ module graphics #(
     .INIT_FILE()
   ) frame_mem_2 (
     .addra(write_mem_2 ? frame_loc_ptr : output_index),
-    .dina(read_color_index),       //
+    .dina(dina2),       //
     .clka(clk_pixel),
-    .wea(write_mem_2 && reading),         // writing
+    .wea(wea2),         // writing
     .ena(1'b1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(sys_rst),       // Output reset (does not affect memory contents)
     .regcea(1'b1),   // Output register enable
