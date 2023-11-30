@@ -27,6 +27,8 @@ registers={
     "x10": "01010",
     "x11": "01011",
 }
+for i in range(32):
+    registers["x"+str(i)]=binary(i,5);
 sprites={
     "s0": "000000",
     "s1": "000001",
@@ -61,6 +63,7 @@ instructions={
     "slli":"0010011",
     "multi":"0010011",
     "srli":"0010011",
+    "abs":"0110011",
     "add":"0110011",
     "sub":"0110011",
     "sll":"0110011",
@@ -96,6 +99,7 @@ regreginstr={
     "sll":"0000010",
     "mult":"0000011",
     "srl":"0000100",
+    "abs":"0000101"
 }
 branchinstr={
     "beq":"000",
@@ -176,7 +180,7 @@ with open('data/instructions.mem', 'w') as f:
             f.write(tohex(binary(words[3],3)+"1"+binary("0",12)+registers[words[1]]+"000"+registers[words[2]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spaddi" or words[0]=="spsubi"):
             if words[1] not in registers or words[2] not in registers:
-                raise Exception("syntax error register/sprite not present")
+                raise Exception("syntax error register/sprite not present",words)
             f.write(tohex(binary(words[4],3)+"1"+binary(words[3],12)+registers[words[2]]+immediateinstr[words[0]]+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="addi" or words[0]=="subi" or words[0]=="slli" or words[0]=="multi" or
               words[0]=="srli"):
@@ -199,21 +203,18 @@ with open('data/instructions.mem', 'w') as f:
             if words[1] not in registers or words[2] not in registers:
                 raise Exception("syntax error register/sprite not present")
             f.write(tohex(binary(words[3],3)+"1"+"010000000000"+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
-        elif (words[0]=="add" or words[0]=="sub" or words[0]=="sll" or words[0]=="mult" or words[0]=="srl"):
+        elif (words[0]=="abs" or words[0]=="add" or words[0]=="sub" or words[0]=="sll" or words[0]=="mult" or words[0]=="srl"):
             if words[1] not in registers or words[2] not in registers or words[3] not in registers:
                 raise Exception("syntax error register not present")
             f.write(tohex(regreginstr[words[0]]+registers[words[3]]+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
-        # elif (words[0]=="sub"):
-        #     if words[1] not in registers or words[2] not in registers or words[3] not in registers:
-        #         raise Exception("syntax error register not present")
-        #     f.write(tohex("0100000"+registers[words[3]]+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="beq" or words[0]=="bne" or words[0]=="bge" or words[0]=="blt"):
             #words[3]=words[3][1:] #first char is !
+            print(words)
             if (words[3] not in loops):
                 raise Exception("loop not found: ",words[3])
             loop=binary(loops[words[3]],12)
             if words[1] not in registers or words[2] not in registers:
-                raise Exception("syntax error register not present")
+                raise Exception("syntax error register not present",words)
             f.write(tohex("0000"+loop[0:7]+registers[words[1]]+registers[words[2]]+branchinstr[words[0]]+loop[7:12] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spbeq" or words[0]=="spbne" or words[0]=="spbge" or words[0]=="spblt"): #not done yet
             words[3]=words[3][1:] #first char is !
@@ -230,5 +231,5 @@ with open('data/instructions.mem', 'w') as f:
         elif (words[0]=='dist'):
             if (words[1] not in registers or words[2] not in registers or words[3] not in registers):
                 raise Exception("syntax error register/sprite not present")
-            f.write(tohex(binary(words[4],3)+"1"+binary(words[5],3)+binary("0",4)+registers[words[1]]+registers[words[2]] +"0"+ registers[words[3]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
+            f.write(tohex(binary(words[4],3)+"1"+binary(words[5],3)+binary("0",4)+registers[words[1]]+registers[words[2]] +"000"+ registers[words[3]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
 

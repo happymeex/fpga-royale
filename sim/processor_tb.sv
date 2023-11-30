@@ -4,7 +4,7 @@
 module processor_tb;
 
     //make logics for inputs and outputs!
-  localparam  INSTRUCTIONS_SIZE=19;
+  localparam  INSTRUCTIONS_SIZE=60;
   logic pixel_clk_in;
   logic rst_in;
   logic new_frame;
@@ -38,11 +38,14 @@ module processor_tb;
         $dumpfile("processor.vcd"); //file to store value change dump (vcd)
         $dumpvars(0,processor_tb); //store everything at the current level and below
         $dumpvars(0, uut.regs[0], uut.regs[1],uut.regs[2],uut.regs[3],uut.regs[4],uut.regs[5]
-        ,uut.regs[6],uut.regs[7],uut.regs[8]);
+        ,uut.regs[6],uut.regs[7],uut.regs[8],uut.regs[9],uut.regs[10],uut.regs[11]
+        ,uut.regs[12],uut.regs[13],uut.regs[14],uut.regs[15],uut.regs[16],uut.regs[17]);
         //s0
-        $dumpvars(0, uut.sprites[0],uut.sprites[1], uut.sprites[2],uut.sprites[3]);
+        $dumpvars(0, uut.sprites[0],uut.sprites[1], uut.sprites[2],uut.sprites[3],
+        uut.sprites[4],uut.sprites[5], uut.sprites[6],uut.sprites[7]);
         //s1
-        $dumpvars(0, uut.sprites[8],uut.sprites[9], uut.sprites[10],uut.sprites[11]);
+        $dumpvars(0, uut.sprites[8],uut.sprites[9], uut.sprites[10],uut.sprites[11],
+        uut.sprites[12],uut.sprites[13], uut.sprites[14],uut.sprites[15]);
         $dumpvars(0,uut.sprites[16]);
         $dumpvars(0,uut.sprites[24]);
         $dumpvars(0,uut.sprites[32]);
@@ -63,11 +66,11 @@ module processor_tb;
         $display("Starting Sim"); //print nice message
         pixel_clk_in = 0; //initialize clk (super important)
         rst_in = 0; //initialize rst (super important)
-        for (int i=0;i<INSTRUCTIONS_SIZE*10;i++)begin
+        for (int i=0;i<INSTRUCTIONS_SIZE*10000;i++)begin
           new_frame=1;
           #10
           new_frame=0;
-          #10000;
+          #10;
         end
         #100;
         $display("Finishing Sim"); //print nice message
