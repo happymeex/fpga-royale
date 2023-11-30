@@ -3,9 +3,9 @@ from PIL import Image
 
 palette_outpath = "data/palette.mem"
 spritesheet_outpath = "data/spritesheet.mem"
-palette_size = 8  # includes a transparent color
+palette_size = 7  # includes a transparent color
 transparency_threshold = 10
-
+green = '32a852'
 
 def color_to_hex(color):
     '''
@@ -38,7 +38,9 @@ palette = [tuple(palette[i:i+3]) for i in range(0, len(palette), 3)]
 with open(palette_outpath, 'w') as f:
     f.write('\n'.join([color_to_hex(color)
             for color in palette[:palette_size]]))
+    f.write('\n' + green) # background green appended as final color
     print(f"palette written to {palette_outpath}")
+
 
 # write image to file
 with open(spritesheet_outpath, 'w') as f:

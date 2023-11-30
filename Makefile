@@ -1,3 +1,6 @@
+spritesheet:
+	python3 ./spritesheet.py ./assets/fox_spritesheet.png 1 5
+
 assemble:
 	python3 ./removewhitespace.py
 	python3 ./assembler.py
