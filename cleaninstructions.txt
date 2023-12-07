@@ -3,19 +3,62 @@ spli x2 100 1
 spli x2 500 2
 spli x2 0 3
 spli x2 1 0
+spli x2 1 7
+addi x2 x2 1
+spli x2 0 1
+spli x2 100 2
+spli x2 0 3
+spli x2 1 0
+spli x2 0 7
 li x0 0
-li x1 5
-li x6 1
+li x6 64
 LOOP
-addi x0 x0 1
-bne x1 x0 LOOPIF1
-li x0 0
-LOOPIF1
-splreg x2 x0 3
+li x1 0
+FOR1
+lisp x1 x2 0
+beq x2 x0 SKIP
+lisp x1 x2 7
+li x3 0
+li x10 100000
+li x11 0
+li x12 0
+FOR2
+beq x3 x1 SKIPINNER
+li x4 0
+lisp x3 x5 0
+beq x5 x4 SKIPINNER
+lisp x3 x5 7
+beq x5 x2 SKIPINNER
+dist x1 x3 x5 1 2
+bge x5 x10 SKIPINNER
+addi x10 x5 0
+lisp x3 x11 1
+lisp x3 x12 2
+SKIPINNER
+addi x3 x3 1
+bne x3 x6 FOR2
+li x13 100000
+beq x10 x13 SKIP
+lisp x1 x13 1
+lisp x1 x14 2
+abs x15 x13 x11
+abs x16 x14 x12
+li x17 5
+blt x15 x16 IFVERT
+blt x11 x13 LEFT
+spadd x1 x17 1
+jmp SKIP
+LEFT
+spsub x1 x17 1
+jmp SKIP
+IFVERT
+blt x12 x14 UP
+spadd x1 x17 2
+jmp SKIP
+UP
+spsub x1 x17 2
+SKIP
+addi x1 x1 1
+bne x1 x6 FOR1
 wait 20000000
-wait 20000000
-wait 20000000
-wait 20000000
-wait 20000000
-spsub x2 x6 2
 jmp LOOP
