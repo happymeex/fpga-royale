@@ -100,14 +100,16 @@ module graphics #(
   // the other is read from; switch roles in next frame.
 
   logic [$clog2(CANVAS_PIXELS)-1:0] frame_loc_ptr; // pointer for writing palette value to frame storage
-  logic [$clog2(CANVAS_WIDTH)-1:0] frame_x;
-  logic [$clog2(CANVAS_HEIGHT)-1:0] frame_y;
+  logic [$clog2(CANVAS_WIDTH):0] frame_x;
+  logic [$clog2(CANVAS_HEIGHT):0] frame_y;
   assign frame_loc_ptr = frame_y * CANVAS_WIDTH + frame_x; // row major order
+  logic in_range;
+  assign in_range = frame_x < CANVAS_WIDTH && frame_y < CANVAS_HEIGHT;
 
   logic is_transparent = read_color_index == 0; // true if current pixel being read from spritesheet is transparent
 
   logic wea1;
-  assign wea1 = write_mem_1 && reading && !is_transparent || !write_mem_1;
+  assign wea1 = write_mem_1 && reading && !is_transparent && in_range || !write_mem_1;
   logic [PALETTE_WIDTH-1:0] dina1;
   always_comb begin
     if (write_mem_1 && reading) dina1 = read_color_index;
@@ -130,7 +132,7 @@ module graphics #(
   );
 
   logic wea2;
-  assign wea2 = write_mem_2 && reading && !is_transparent || !write_mem_2;
+  assign wea2 = write_mem_2 && reading && !is_transparent && in_range || !write_mem_2;
   logic [PALETTE_WIDTH-1:0] dina2;
   always_comb begin
     if (write_mem_2 && reading) dina2 = read_color_index;

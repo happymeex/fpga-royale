@@ -3,6 +3,12 @@
 
 module top_level(
   input wire clk_100mhz,
+  input wire [3:0] btn,
+  input wire [7:0] pmodb,
+  output logic [3:0] ss0_an,//anode control for upper four digits of seven-seg display
+	output logic [3:0] ss1_an,//anode control for lower four digits of seven-seg display
+	output logic [6:0] ss0_c, //cathode controls for the segments of upper four digits
+	output logic [6:0] ss1_c, //cathod controls for the segments of lower four digits
   output logic [2:0] hdmi_tx_p,
   output logic [2:0] hdmi_tx_n,
   output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
@@ -18,11 +24,17 @@ module top_level(
 
   logic locked; // unused
   logic sys_rst;
-  assign sys_rst = 0;
+  assign sys_rst = btn[2];
+
+  logic buf_clk;
+  BUFG bu (
+    .I(clk_100mhz),
+    .O(buf_clk)
+  );
 
   logic clk_pixel, clk_5x;
   hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
-          .reset(0), .locked(locked), .clk_ref(clk_100mhz));
+          .reset(0), .locked(locked), .clk_ref(buf_clk));
   
   localparam NUM_FRAMES = 5;
   localparam CANVAS_HEIGHT = 720;
@@ -32,6 +44,30 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x;
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y;
+  logic click;
+  logic ps2_clk_a;
+  logic ps2_data_a;
+  assign ps2_clk_a = pmodb[2];
+  assign ps2_data_a = pmodb[0];
+
+  logic [6:0] ss_c;
+  logic [29:0] blah;
+  logic test_clk;
+  initial test_clk = 1;
+  always_ff @( posedge buf_clk ) begin
+    if (ps2_clk_a == 0) test_clk <= 0;
+  end
+  assign blah = 0;
+  seven_segment_controller mssc(.clk_in(buf_clk),
+                                  .rst_in(sys_rst),
+                                  .val_in({blah, test_clk, ps2_clk_a}),
+                                  .cat_out(ss_c),
+                                  .an_out({ss0_an, ss1_an}));
+  assign ss0_c = ss_c; //control upper four digit's cathodes!
+  assign ss1_c = ss_c; //same as above but for lower four digits!
+
   singleprocessor #(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
@@ -79,9 +115,13 @@ module top_level(
     .vcount(vcount),
     .vert_sync(vert_sync),
     .hor_sync(hor_sync),
-    .sprite_valid(sprite_valid),
-    .sprite_x(sprite_x),
-    .sprite_y(sprite_y),
+    .sprite_valid(1),
+    //.sprite_x(sprite_x),
+    //.sprite_y(sprite_y),
+    //.sprite_x(300),
+    //.sprite_y(200),
+    .sprite_x(mouse_x),
+    .sprite_y(mouse_y),
     .sprite_frame_number(sprite_frame),
     .sprite_ready(),
     .hdmi_tx_p(hdmi_tx_p),
@@ -90,6 +130,19 @@ module top_level(
     .hdmi_clk_n(hdmi_clk_n)
   );
 
+
+mouse #(
+  .CANVAS_WIDTH(CANVAS_WIDTH),
+  .CANVAS_HEIGHT(CANVAS_HEIGHT)
+) ms_a (
+  .clk_in(clk_pixel),
+  .clk_ps2_raw(ps2_clk_a),
+  .rst_in(sys_rst),
+  .ps2_data(ps2_data_a),
+  .mouse_x(mouse_x),
+  .mouse_y(mouse_y),
+  .click(click)
+);
 // logic [3:0] counter;
 // logic [5:0] prev_frame_count;
 // logic forward_wag;

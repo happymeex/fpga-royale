@@ -12,8 +12,6 @@ module mouse_tb;
     logic rst_in;
     logic click;
     
-    logic [7:0] mouse_dx;
-    logic [7:0] mouse_dy;
     logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x;
     logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y;
 
@@ -32,8 +30,6 @@ module mouse_tb;
         .clk_ps2_raw(clk_ps2_raw),
         .ps2_data(ps2_data),
         .rst_in(rst_in),
-        .mouse_dx(mouse_dx),
-        .mouse_dy(mouse_dy),
         .mouse_x(mouse_x),
         .mouse_y(mouse_y),
         .click(click)

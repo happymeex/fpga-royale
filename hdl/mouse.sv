@@ -10,8 +10,6 @@ module mouse #(
     input wire ps2_data,
     input wire rst_in,
     output logic click,
-    output logic [7:0] mouse_dx,
-    output logic [7:0] mouse_dy,
     output logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x,
     output logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y
 );
@@ -33,6 +31,8 @@ State state;
 ByteType btype;
 
 logic clk_ps2;
+logic [7:0] mouse_dx;
+logic [7:0] mouse_dy;
 
 synchronizer sync (
     .clk_in(clk_in),
