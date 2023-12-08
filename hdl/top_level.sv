@@ -3,6 +3,7 @@
 
 module top_level(
   input wire clk_100mhz,
+  input wire [15:0] sw, //all 16 input slide switches
   output logic [2:0] hdmi_tx_p,
   output logic [2:0] hdmi_tx_n,
   output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
@@ -15,7 +16,8 @@ module top_level(
   logic active_draw;
   logic new_frame;
   logic [5:0] frame_count;
-
+  logic runProc;
+  assign runProc=sw;
   logic locked; // unused
   logic sys_rst;
   assign sys_rst = 0;
@@ -32,11 +34,20 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
+
+  logic [31:0]m1x;
+  logic[31:0] m1y;
+  logic m1c;
+  logic [31:0]m2x;
+  logic[31:0] m2y;
+  logic m2c;
+  initial m1c=0;
+  initial m2c=0;
   singleprocessor #(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
     .NUM_FRAMES(NUM_FRAMES),
-    .INSTRUCTIONS_SIZE(100),
+    .INSTRUCTIONS_SIZE(500),
     .MAX_SPRITES(64),
     .MEMORY_SIZE(100),
     .INSTRUCTION_WIDTH(36),
@@ -48,7 +59,14 @@ module top_level(
     .x(sprite_x),
     .y(sprite_y),
     .frame(sprite_frame),
-    .sprite_valid(sprite_valid)
+    .sprite_valid(sprite_valid),
+    .mouse1x(m1x),
+    .mouse1y(m1y),
+    .isClicked1(m1c),
+    .mouse2x(m2x),
+    .mouse2y(m2y),
+    .isClicked2(m2c),
+    .isOn(sw[0])
   );
   
   video_sig_gen mvg(

@@ -15,7 +15,14 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   output wire[$clog2(CANVAS_WIDTH)-1:0] x,
   output wire [$clog2(CANVAS_HEIGHT)-1:0] y,
   output wire [$clog2(NUM_FRAMES)-1:0] frame,
-  output wire sprite_valid
+  output wire sprite_valid,
+  input wire[31:0] mouse1x,
+  input wire[31:0] mouse1y,
+  input wire[31:0] mouse2x,
+  input wire[31:0] mouse2y,
+  input wire isClicked1,
+  input wire isClicked2,
+  input wire isOn
   );
   //register file
   /*
@@ -74,6 +81,13 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   logic [6:0] instr;
   initial rb=0;
   initial wb=0;
+  // assign sprites[505]=0;
+//   assign sprite[505]=mouse1x;
+//   assign sprite[506]=mouse1y;
+//   assign sprite[507]=isClicked1;
+//   assign sprite[508]=mouse2x;
+//   assign sprite[509]=mouse2y;
+//   assign sprite[510]=isClicked2;
   logic [31:0]memout;
   logic readstage;
   //memory
@@ -92,7 +106,6 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .regcea(1),   // Output register enable
     .douta(memout)      // RAM output data, width determined from RAM_WIDTH
   );
-
   //instructions
   xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(INSTRUCTION_WIDTH),                       // Specify RAM data width
@@ -111,6 +124,14 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   );
 logic [31:0] counter;
 always_ff @(posedge pixel_clk_in) begin
+    if (isOn) begin
+    sprites[504]<=0;
+    sprites[505]<=mouse1x;
+    sprites[506]<=mouse1y;
+    sprites[507]<=sprites[507]? 1:isClicked1;
+    sprites[508]<=mouse2x;
+    sprites[509]<=mouse2y;
+    sprites[510]<=sprites[510] ? 1:isClicked2;
     if(new_frame) begin
         state<=0;
         counter<=0;
@@ -505,10 +526,10 @@ always_ff @(posedge pixel_clk_in) begin
                             nop<=1;
                             res<=r1<<r2;
                         end
-                    3'b011:begin //mult
-                            nop<=1;
-                            res<=r1*r2;
-                        end
+                    // 3'b011:begin //multi
+                    //         nop<=1;
+                    //         res<=r1*r2;
+                    //     end
                     3'b101:begin //shift right
                             nop<=1;
                             res<=r1>>r2;
@@ -596,10 +617,10 @@ always_ff @(posedge pixel_clk_in) begin
                     res<=r1<<r2;
                     nop<=1;
                end
-                7'b0000011: begin //MULT
-                    res<=r1*r2;
-                    nop<=1;
-                end
+                // 7'b0000011: begin //MULT
+                //     res<=r1*r2;
+                //     nop<=1;
+                // end
                 7'b0000100: begin //SRL 
                     res<=r1>>r2;
                     nop<=1;
@@ -616,6 +637,7 @@ always_ff @(posedge pixel_clk_in) begin
                 wb<=0;
             end
         endcase
+    end
     end
 end
 
