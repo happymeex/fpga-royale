@@ -4,7 +4,7 @@
 module top_level(
   input wire clk_100mhz,
   input wire [3:0] btn,
-  input wire [7:0] pmodb,
+  inout wire [7:0] pmodb,
   output logic [3:0] ss0_an,//anode control for upper four digits of seven-seg display
 	output logic [3:0] ss1_an,//anode control for lower four digits of seven-seg display
 	output logic [6:0] ss0_c, //cathode controls for the segments of upper four digits
@@ -131,12 +131,12 @@ module top_level(
   );
 
 
-mouse #(
+mouse_iface #(
   .CANVAS_WIDTH(CANVAS_WIDTH),
   .CANVAS_HEIGHT(CANVAS_HEIGHT)
 ) ms_a (
-  .clk_in(clk_pixel),
-  .clk_ps2_raw(ps2_clk_a),
+  .clk_in(buf_clk),
+  .ps2_clk(ps2_clk_a),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_a),
   .mouse_x(mouse_x),
