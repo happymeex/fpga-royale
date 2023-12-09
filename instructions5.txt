@@ -9,12 +9,8 @@ subi x2 x2 1
 //5 is reserved for -2
 sw x2 5(x0)
 li x2 2000 //countdown!!!
-//6 is reserved for walk countdown
+//6 is reserved for countdown
 sw x2 6(x0)
-li x2 100000
-//4 is reserved for attack countdown
-sw x2 4(x0)
-//sw x2 8(x0)
 //sprite sheets
 // type 4
 sw x0 32(x0) //frame 0 for barb
@@ -41,32 +37,22 @@ sw x2 10(x0)
 //midpoint x
 li x2 200
 sw x2 11(x0)
-//mice
-//li x2 62
-li x2 8
-spli x2 0 3
-//li x2 63
-spli x2 0 3 
-//spli x2 4 0
-//spli x2 0 1
-//spli x2 0 2
-spli x2 0 3
-//spli x2 100 4
+
 //sprite 1
 li x2 0 //x2=0
 spli x2 5 0
 spli x2 100 1
 spli x2 600 2
 spli x2 0 3
-spli x2 1000 4
+spli x2 100 4
 spli x2 10 5
 spli x2 0 6
 spli x2 1 7
 slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
-//sprite 2
-addi x2 x0 1 //x2=3
+//sprite 4
+addi x2 x0 3 //x2=3
 spli x2 4 0
 spli x2 100 1
 spli x2 100 2
@@ -77,20 +63,6 @@ spli x2 0 6
 spli x2 0 7
 slli x3 x2 2
 sw x0 65(x3) //countdown is 0
-
-//sprite 20
-addi x2 x0 8 //x2=3
-spli x2 4 0
-spli x2 200 1
-spli x2 300 2
-spli x2 0 3
-spli x2 100 4
-spli x2 5 5 
-spli x2 0 6
-spli x2 0 7
-slli x3 x2 2
-sw x0 65(x3) //countdown is 0
-
 
 //sprite 3
 addi x2 x0 2 //x2=2
@@ -122,7 +94,7 @@ sw x0 65(x3) //countdown is 0
 li x1 0
 sw x1 66(x3) //target is sprite 0
 //main for loop
-li x6 62 //x6 = max sprites-2
+li x6 63 //x6 = max sprites-1
 LOOP
 li x1 0
 //0 = ismouse1clicked selection
@@ -210,7 +182,7 @@ FOR1 //loop through all sprites with x1
                 lisp x1 x9 7 //x9 = team
                 bne x9 x0 TEAM0
                     //team1
-                    li x10 62
+                    li x10 63
                     LOOPSELECTARROW
                     lisp x10 x11 0 //x11 = x10 type
                     bne x11 x0 NOTARROWCARD
@@ -229,7 +201,6 @@ FOR1 //loop through all sprites with x1
                         lw x12 66(x11) //get target
                         slli x11 x10 2 //x11= x10*4
                         sw x12 66(x11)
-                        splreg x10 x12 4
                         spli x10 2 0 //load in sprite last
                         jmp SKIP
                     NOTARROWCARD
@@ -260,7 +231,7 @@ FOR1 //loop through all sprites with x1
                         jmp SKIP
                     NOTARROWCARD2
                     addi x10 x10 1
-                    li x11 62
+                    li x11 63
                     bne x10 x11 LOOPSELECTARROW2
                     jmp SKIP
                 REGULARATTACK
@@ -305,7 +276,7 @@ FOR1 //loop through all sprites with x1
         addi x20 x3 0 //load sprite index to x20
         SKIPINNER
         addi x3 x3 1 //increment x3
-        li x6 62
+        li x6 63
     bne x3 x6 FOR2 //END FOR2
     li x13 10000
     beq x10 x13 SKIP //skip if found no one
@@ -343,7 +314,7 @@ FOR1 //loop through all sprites with x1
     lisp x1 x4 0 //x4 is type
     li x3 5
     bne x3 x4 NOTARCHER
-        li x19 300 //300 for archers
+        li x19 100 //100 for archers
     NOTARCHER
 
     blt x18 x19 GETFIGHTING
@@ -390,7 +361,7 @@ FOR1 //loop through all sprites with x1
         sw x7 65(x3) //change countdown
         li x4 2
         bne x4 x2 NOARROWCOUNTDOWN
-            li x7 1
+            srli x7 x7 3
             sw x7 65(x3)
         NOARROWCOUNTDOWN
         blt x15 x16 IFVERT
@@ -422,13 +393,13 @@ FOR1 //loop through all sprites with x1
         lw x7 16(x6) //load base frame to x7
         addi x7 x7 3 //fighting1 is 3+base
         splreg x1 x7 3 //change frame to fighting1
-        lw x7 4(x0) 
+        lw x7 6(x0) 
         slli x3 x1 2
         sw x7 65(x3) //change countdown
         sw x20 66(x3) //target
         jmp SKIP
     SKIP
     addi x1 x1 1 //increment x1
-    li x6 62
+    li x6 63
 bne x1 x6 FOR1 //END FOR1
 jmp LOOP

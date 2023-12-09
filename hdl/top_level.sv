@@ -5,13 +5,15 @@ module top_level(
   input wire clk_100mhz,
   input wire [3:0] btn,
   inout wire [7:0] pmodb,
+  input wire [15:0] sw, //all 16 input slide switches
   output logic [3:0] ss0_an,//anode control for upper four digits of seven-seg display
 	output logic [3:0] ss1_an,//anode control for lower four digits of seven-seg display
 	output logic [6:0] ss0_c, //cathode controls for the segments of upper four digits
 	output logic [6:0] ss1_c, //cathod controls for the segments of lower four digits
   output logic [2:0] hdmi_tx_p,
   output logic [2:0] hdmi_tx_n,
-  output logic hdmi_clk_p, hdmi_clk_n //differential hdmi clock
+  output logic hdmi_clk_p, hdmi_clk_n, //differential hdmi clock
+  input wire uart_rxd
 );
   //signals related to driving the video pipeline
   logic [10:0] hcount;
@@ -21,12 +23,9 @@ module top_level(
   logic active_draw;
   logic new_frame;
   logic [5:0] frame_count;
-  logic runProc;
-  assign runProc=sw;
   logic locked; // unused
   logic sys_rst;
   assign sys_rst = btn[2];
-
   logic buf_clk;
   BUFG bu (
     .I(clk_100mhz),
@@ -61,9 +60,10 @@ module top_level(
     if (ps2_clk_a == 0) test_clk <= 0;
   end
   assign blah = 0;
+  logic [31:0]val_in;
   seven_segment_controller mssc(.clk_in(buf_clk),
                                   .rst_in(sys_rst),
-                                  .val_in({blah, test_clk, ps2_clk_a}),
+                                  .val_in({mouse_x,2'b0,mouse_y}),
                                   .cat_out(ss_c),
                                   .an_out({ss0_an, ss1_an}));
   assign ss0_c = ss_c; //control upper four digit's cathodes!
@@ -86,13 +86,15 @@ module top_level(
     .y(sprite_y),
     .frame(sprite_frame),
     .sprite_valid(sprite_valid),
-    .mouse1x(m1x),
-    .mouse1y(m1y),
-    .isClicked1(m1c),
-    .mouse2x(m2x),
-    .mouse2y(m2y),
-    .isClicked2(m2c),
-    .isOn(sw[0])
+    .mouse1x(mouse_x),
+    .mouse1y(mouse_y),
+    .isClicked1(click),
+    .mouse2x(0),
+    .mouse2y(0),
+    .isClicked2(0),
+    .isOn(sw[0]),
+    .uart_rx_in(uart_rxd),
+    .go(btn[3])
   );
   
   video_sig_gen mvg(
@@ -123,13 +125,13 @@ module top_level(
     .vcount(vcount),
     .vert_sync(vert_sync),
     .hor_sync(hor_sync),
-    .sprite_valid(1),
-    //.sprite_x(sprite_x),
-    //.sprite_y(sprite_y),
+    .sprite_valid(sprite_valid),
+    .sprite_x(sprite_x),
+    .sprite_y(sprite_y),
     //.sprite_x(300),
     //.sprite_y(200),
-    .sprite_x(mouse_x),
-    .sprite_y(mouse_y),
+   // .sprite_x(mouse_x),
+   // .sprite_y(mouse_y),
     .sprite_frame_number(sprite_frame),
     .sprite_ready(),
     .hdmi_tx_p(hdmi_tx_p),

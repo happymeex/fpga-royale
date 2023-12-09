@@ -22,7 +22,9 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   input wire[31:0] mouse2y,
   input wire isClicked1,
   input wire isClicked2,
-  input wire isOn
+  input wire isOn,
+  input wire go,
+  input wire uart_rx_in
   );
   //register file
   /*
@@ -56,7 +58,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   //elixir count
   logic [3:0] elixir;
   //all sprites
-  logic[31:0] sprites[511:0];
+  logic[15:0] sprites[511:0];
   initial begin
     for (int i = 0 ; i < 64; i++) begin
         sprites[i<<3] = 0;
@@ -74,20 +76,13 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   logic [2:0] sindex;
   logic wsprite;
   logic rdvalid;
-  logic [5:0] rd;
+  logic [8:0] rd;
   logic [31:0] write;
   logic rb;
   logic wb;
   logic [6:0] instr;
   initial rb=0;
   initial wb=0;
-  // assign sprites[505]=0;
-//   assign sprite[505]=mouse1x;
-//   assign sprite[506]=mouse1y;
-//   assign sprite[507]=isClicked1;
-//   assign sprite[508]=mouse2x;
-//   assign sprite[509]=mouse2y;
-//   assign sprite[510]=isClicked2;
   logic [31:0]memout;
   logic readstage;
   //memory
@@ -106,11 +101,31 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .regcea(1),   // Output register enable
     .douta(memout)      // RAM output data, width determined from RAM_WIDTH
   );
+    logic [7:0] urx_brx_data;
+    logic urx_brx_valid;
+    logic [31:0] brx_mem_addr;
+    logic [35:0] brx_mem_data;
+    logic brx_mem_valid;
+    uart_rx #(.CLOCKS_PER_BAUD(645)) urx (
+        .clk(pixel_clk_in),
+        .rx(uart_rx_in),
+        .data_o(urx_brx_data),
+        .valid_o(urx_brx_valid)
+    );
+    ram_bridge_rx brx (
+        .clk_in(pixel_clk_in),
+        .data_in(urx_brx_data),
+        .valid_in(urx_brx_valid),
+        .addr_out(brx_mem_addr),
+        .data_out(brx_mem_data),
+        .valid_out(brx_mem_valid)
+    );
   //instructions
-  xilinx_single_port_ram_read_first #(
+  xilinx_true_dual_port_read_first_2_clock_ram #(
     .RAM_WIDTH(INSTRUCTION_WIDTH),                       // Specify RAM data width
     .RAM_DEPTH(INSTRUCTIONS_SIZE+1),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("LOW_LATENCY"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
+  //  .INIT_FILE() 
     .INIT_FILE(`FPATH(instructions.mem))          // Specify name/location of RAM initialization file if using one (leave blank if not)
   ) instructions (
     .addra(count),     // Address bus, width determined from RAM_DEPTH
@@ -120,18 +135,39 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(rst_in),       // Output reset (does not affect memory contents)
     .regcea(1),   // Output register enable
-    .douta(oldinstruction)      // RAM output data, width determined from RAM_WIDTH
+    .douta(oldinstruction),      // RAM output data, width determined from RAM_WIDTH
+    .addrb(brx_mem_addr),     // Address bus, width determined from RAM_DEPTH
+    .dinb(brx_mem_data),       // RAM input data, width determined from RAM_WIDTH
+    .clkb(pixel_clk_in),       // Clock
+    .web(brx_mem_valid),         // Write enable
+    .enb(1),         // RAM Enable, for additional power savings, disable port when not in use
+    .rstb(rst_in),       // Output reset (does not affect memory contents)
+    .regceb(0),   // Output register enable
+    .doutb()      // RAM output data, width determined from RAM_WIDTH
   );
 logic [31:0] counter;
 always_ff @(posedge pixel_clk_in) begin
+    if (brx_mem_addr==0 && brx_mem_valid)begin
+        count<=0;
+        nop<=1;
+    end
     if (isOn) begin
-    sprites[504]<=0;
-    sprites[505]<=mouse1x;
-    sprites[506]<=mouse1y;
-    sprites[507]<=sprites[507]? 1:isClicked1;
-    sprites[508]<=mouse2x;
-    sprites[509]<=mouse2y;
-    sprites[510]<=sprites[510] ? 1:isClicked2;
+    sprites[64]<=6;
+    sprites[65]<=mouse1x;
+    sprites[66]<=mouse1y;
+    sprites[68]<=sprites[68]? 1:isClicked1;
+    sprites[72]<=6;
+    sprites[73]<=mouse2x;
+    sprites[74]<=mouse2y;
+    sprites[76]<=sprites[76] ? 1:isClicked2;
+    // sprites[496]<=6;
+    // sprites[497]<=mouse1x;
+    // sprites[498]<=mouse1y;
+    // sprites[500]<=sprites[500]? 1:isClicked1;
+   // sprites[504]<=6;
+   // sprites[505]<=mouse2x;
+   // sprites[506]<=mouse2y;
+   // sprites[508]<=sprites[508] ? 1:isClicked2;
     if(new_frame) begin
         state<=0;
         counter<=0;
@@ -150,7 +186,7 @@ always_ff @(posedge pixel_clk_in) begin
             sprite_valid_<=0;
         end
         counter<=counter+1;
-        if (counter>40000) begin
+        if (counter>25000) begin
           counter<=0;
           state<=state+1;
         end
@@ -160,6 +196,7 @@ always_ff @(posedge pixel_clk_in) begin
     end
     if (rst_in) begin
         count<=0;
+        nop<=1;
     end else if (nop) begin
             if (nop==1) begin
                 wb<=0;
