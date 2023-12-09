@@ -63,7 +63,7 @@ module top_level(
   logic [31:0]val_in;
   seven_segment_controller mssc(.clk_in(buf_clk),
                                   .rst_in(sys_rst),
-                                  .val_in({mouse_x,2'b0,mouse_y}),
+                                  .val_in({click,mouse_x,2'b0,mouse_y}),
                                   .cat_out(ss_c),
                                   .an_out({ss0_an, ss1_an}));
   assign ss0_c = ss_c; //control upper four digit's cathodes!
@@ -73,9 +73,9 @@ module top_level(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
     .NUM_FRAMES(NUM_FRAMES),
-    .INSTRUCTIONS_SIZE(500),
+    .INSTRUCTIONS_SIZE(800),
     .MAX_SPRITES(64),
-    .MEMORY_SIZE(100),
+    .MEMORY_SIZE(500),
     .INSTRUCTION_WIDTH(36),
     .ROW_SIZE(1280) // not used for now
   ) pr (

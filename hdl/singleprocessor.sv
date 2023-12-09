@@ -113,10 +113,10 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
         .valid_o(urx_brx_valid)
     );
     ram_bridge_rx brx (
-        .clk_in(pixel_clk_in),
+        .pixel_clk_in(pixel_clk_in),
         .data_in(urx_brx_data),
         .valid_in(urx_brx_valid),
-        .addr_out(brx_mem_addr),
+        .addr(brx_mem_addr),
         .data_out(brx_mem_data),
         .valid_out(brx_mem_valid)
     );
@@ -155,11 +155,11 @@ always_ff @(posedge pixel_clk_in) begin
     sprites[64]<=6;
     sprites[65]<=mouse1x;
     sprites[66]<=mouse1y;
-    sprites[68]<=sprites[68]? 1:isClicked1;
+    sprites[68]<=isClicked1;
     sprites[72]<=6;
     sprites[73]<=mouse2x;
     sprites[74]<=mouse2y;
-    sprites[76]<=sprites[76] ? 1:isClicked2;
+    sprites[76]<=isClicked2;
     // sprites[496]<=6;
     // sprites[497]<=mouse1x;
     // sprites[498]<=mouse1y;
