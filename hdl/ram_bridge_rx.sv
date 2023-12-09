@@ -16,7 +16,7 @@ module ram_bridge_rx (
     logic state;
     logic [3:0] counter;
 
-    always_ff @(posedge clk_in) begin
+    always_ff @(posedge pixel_clk_in) begin
         if (state == 0) begin
             addr <= 0;
             data_out <= 0;
