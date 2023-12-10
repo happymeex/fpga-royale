@@ -5,7 +5,7 @@ li x2 65535
 slli x2 x2 16
 add x2 x2 x1
 //x2 is -5
-subi x2 x2 1
+subi x2 x2 4
 //5 is reserved for -2
 sw x2 5(x0)
 li x2 2000 //countdown!!!
@@ -39,7 +39,7 @@ sw x2 9(x0)
 li x2 300
 sw x2 10(x0)
 //midpoint x
-li x2 200
+li x2 150
 sw x2 11(x0)
 
 //3 is reserved for mouse localparam
@@ -47,10 +47,13 @@ sw x2 11(x0)
 //li x2 62
 li x2 8
 sw x2 3(x0) //save to mem 3
+sw x0 0(x0) //clear x0
 
-spli x2 0 3
+
 //li x2 63
-spli x2 0 3 
+li x2 9
+spli x2 0 3
+sw x0 1(x0)
 
 //sprite 1
 li x2 0 //x2=0
@@ -118,7 +121,7 @@ spli x2 0 7
 slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
-//hole card
+//hole card barb
 //sprite 5
 addi x2 x0 5 //x2=5
 spli x2 3 0
@@ -127,7 +130,19 @@ spli x2 0 2
 spli x2 0 3
 spli x2 100 4
 spli x2 5 5 
-spli x2 5 6
+spli x2 4 6 //4=barb
+spli x2 0 7
+
+//hole card archer
+//sprite 5
+addi x2 x0 6 //x2=6
+spli x2 3 0
+spli x2 150 1
+spli x2 0 2
+spli x2 0 3
+spli x2 100 4
+spli x2 5 5 
+spli x2 5 6 //5 =archer
 spli x2 0 7
 
 li x1 0
@@ -186,7 +201,7 @@ beq x4 x0 NODEPLOY
                     lisp x5 x11 5
                     splreg x10 x11 5
                     lisp x5 x11 7
-                    spli x10 0 7
+                    splreg x10 x11 7
                     spli x10 0 6
                     slli x11 x10 2 //x11= x10*4
                     sw x0 65(x11) //countdown 0
@@ -209,8 +224,8 @@ NODEPLOY
 //0 = ismouse1clicked selection
 //1 = ismouse2clicked selection
 
-li x2 5
-sw x2 0(x0) //save 0 to 0
+//li x2 5
+//sw x2 0(x0) //save 0 to 0
 FOR1 //loop through all sprites with x1
 
     lisp x1 x2 0 //x2 is type
@@ -219,6 +234,38 @@ FOR1 //loop through all sprites with x1
     beq x3 x2 SKIP //mouse 
     li x3 3 //hole card
     bne x3 x2 NOTHOLECARD
+        //hole card
+        lisp x1 x3 7 //team 
+          beq x3 x0 HOLETEAM0
+            //team1
+            li x3 9
+            lisp x3 x4 6 //load clicked bit to x4
+            beq x4 x0 SKIP
+                //team 1
+                li x3 9
+                li x11 1
+                jmp HOLETEAM1
+            HOLETEAM0
+                //team0
+                li x3 8
+                li x11 0
+            HOLETEAM1
+            lisp x3 x4 6 //load clicked bit to x4    
+            beq x4 x0 SKIP //skip if not clicked
+            //mouse location
+            lisp x3 x4 1
+            lisp x3 x5 2
+            //hole card location
+            lisp x1 x6 1
+            lisp x1 x7 2
+            blt x4 x6 SKIP
+            blt x5 x7 SKIP
+            sub x8 x4 x6
+            sub x9 x5 x7
+            li x10 50
+            bge x8 x10 SKIP
+            bge x9 x10 SKIP
+            sw x1 0(x11)
         jmp SKIP
     NOTHOLECARD
     li x3 2 //arrow
@@ -270,6 +317,11 @@ FOR1 //loop through all sprites with x1
                     addi x7 x7 2 //walking2 is 2+base
                     splreg x1 x7 3 //change frame to walking2
                     lw x7 6(x0) 
+                    lisp x1 x8 0 //x8 = type
+                    li x9 2
+                    bne x8 x9 NOTARROWWALK
+                        srli x7 x7 3
+                    NOTARROWWALK
                     sw x7 65(x3) //change countdown
                     lw x7 66(x3) //load dx
                     lw x8 67(x3) //load dy
@@ -474,33 +526,32 @@ FOR1 //loop through all sprites with x1
         splreg x1 x7 3 //change frame to walking1
         lw x7 6(x0) 
         slli x3 x1 2
+        bne x4 x2 NOARROWCOUNTDOWN
+            srli x7 x7 2
+        NOARROWCOUNTDOWN
         sw x7 65(x3) //change countdown
         li x4 2
-        bne x4 x2 NOARROWCOUNTDOWN
-            li x7 1
-            sw x7 65(x3)
-        NOARROWCOUNTDOWN
         blt x15 x16 IFVERT
         blt x11 x13 LEFT
         //go right
-        li x7 2 //2 pixels
+        li x7 5 //5 pixels
         sw x7 66(x3)
         jmp SKIP
         LEFT
         //go left
-        lw x7 5(x0) //-2
+        lw x7 5(x0) //-5
         sw x7 66(x3)
         jmp SKIP
         IFVERT
         blt x12 x14 UP
         //go down
-        li x7 2
+        li x7 5
         sw x7 67(x3)
         //spadd x1 x17 2 //change 5 pixels
         jmp SKIP
         UP
         //go up
-        lw x7 5(x0) //-2
+        lw x7 5(x0) //-5
         sw x7 67(x3)
         jmp SKIP
     GETFIGHTING
