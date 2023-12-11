@@ -10,7 +10,7 @@
 module graphics #(
   parameter SPRITE_FRAME_WIDTH = 64, // width and height of single frame
   parameter SPRITE_FRAME_HEIGHT = 64,
-  parameter NUM_FRAMES = 512, // total number of frames across all sprites
+  parameter NUM_FRAMES = 18, // total number of frames across all sprites
   parameter WIDTH = 1280,
   parameter HEIGHT = 720,
   parameter CANVAS_WIDTH = 360,

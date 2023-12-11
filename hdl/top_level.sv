@@ -37,9 +37,10 @@ module top_level(
   hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
           .reset(0), .locked(locked), .clk_ref(buf_clk));
   
-  localparam NUM_FRAMES = 5;
+  localparam NUM_FRAMES = 18;
   localparam CANVAS_HEIGHT = 720;
   localparam CANVAS_WIDTH = 360;
+  localparam PALETTE_SIZE = 16;
 
   logic sprite_valid;
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
@@ -120,9 +121,10 @@ module top_level(
   // logic [2:0] frame_number;
 
   graphics #(
-    .SPRITE_FRAME_WIDTH(192), // testing
-    .SPRITE_FRAME_HEIGHT(128),
-    .NUM_FRAMES(NUM_FRAMES)
+    .SPRITE_FRAME_WIDTH(48), // testing
+    .SPRITE_FRAME_HEIGHT(48),
+    .NUM_FRAMES(NUM_FRAMES),
+    .PALETTE_SIZE(PALETTE_SIZE)
   ) gr(
     .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),

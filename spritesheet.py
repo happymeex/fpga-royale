@@ -4,7 +4,6 @@ from PIL import Image
 palette_outpath = "data/palette.mem"
 spritesheet_outpath = "data/spritesheet.mem"
 palette_size = 7  # includes a transparent color
-transparency_threshold = 10
 green = '32a852'
 
 def color_to_hex(color):
@@ -15,13 +14,14 @@ def color_to_hex(color):
     return hex_string
 
 
-if len(sys.argv) < 4:
-    print(f"usage: {sys.argv[0]} <filename> <rows> <columns>")
+if len(sys.argv) < 5:
+    print(f"usage: {sys.argv[0]} <filename> <rows> <columns> <palette size>")
     exit(1)
 
 im = Image.open(sys.argv[1])
 width, height = im.size
 rows, cols = int(sys.argv[2]), int(sys.argv[3])
+palette_size = int(sys.argv[4])
 if width % cols != 0:
     print(f"width ({width}) must be a multiple of columns ({cols})")
     exit(1)
