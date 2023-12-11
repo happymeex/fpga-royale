@@ -1,31 +1,228 @@
+li x0 0
+li x1 65535
+li x2 65535
+slli x2 x2 16
+add x2 x2 x1
+subi x2 x2 1
+sw x2 5(x0)
+li x2 2000
+sw x2 6(x0)
+sw x0 32(x0)
+sw x0 36(x0)
+li x2 5
+sw x2 37(x0)
+li x2 100
+sw x2 38(x0)
+sw x0 37(x0)
+sw x0 24(x0)
+li x2 5
+sw x2 7(x0)
+li x2 300
+sw x2 8(x0)
+li x2 310
+sw x2 9(x0)
+li x2 300
+sw x2 10(x0)
+li x2 200
+sw x2 11(x0)
 li x2 0
+spli x2 5 0
 spli x2 100 1
-spli x2 500 2
+spli x2 600 2
 spli x2 0 3
-spli x2 1 0
+spli x2 100 4
+spli x2 10 5
+spli x2 0 6
 spli x2 1 7
-addi x2 x2 1
-spli x2 0 1
+slli x3 x2 2
+sw x0 65(x3)
+addi x2 x0 3
+spli x2 4 0
+spli x2 100 1
 spli x2 100 2
 spli x2 0 3
-spli x2 1 0
+spli x2 100 4
+spli x2 5 5
+spli x2 0 6
 spli x2 0 7
-li x0 0
-li x6 64
+slli x3 x2 2
+sw x0 65(x3)
+addi x2 x0 2
+spli x2 2 0
+spli x2 100 1
+spli x2 100 2
+spli x2 0 3
+spli x2 0 4
+spli x2 5 5
+spli x2 0 6
+spli x2 0 7
+slli x3 x2 2
+sw x0 65(x3)
+addi x2 x0 3
+spli x2 4 0
+spli x2 0 1
+spli x2 0 2
+spli x2 0 3
+spli x2 100 4
+spli x2 5 5
+spli x2 0 6
+spli x2 0 7
+slli x3 x2 2
+sw x0 65(x3)
+li x1 0
+sw x1 66(x3)
+li x6 63
 LOOP
 li x1 0
+sw x1 0(x1)
+sw x1 1(x1)
+sw x1 17(x1)
 FOR1
 lisp x1 x2 0
 beq x2 x0 SKIP
+li x3 2
+beq x2 x3 ARROWALIVE
+lisp x1 x3 4
+bne x3 x0 ALIVE
+spli x1 0 0
+jmp SKIP
+ALIVE
+ARROWALIVE
+lisp x1 x3 6
+beq x3 x0 NEEDTARGET
+slli x3 x1 2
+lw x4 65(x3)
+beq x4 x0 ZEROCD
+subi x4 x4 1
+sw x4 65(x3)
+jmp SKIP
+ZEROCD
+lisp x1 x4 6
+li x5 3
+beq x4 x5 FIGHT1
+li x5 4
+beq x4 x5 FIGHT2
+li x5 1
+beq x5 x4 WALK1
+li x5 2
+beq x5 x4 WALK2
+jmp SKIP
+WALK2
+slli x6 x2 2
+lw x7 16(x6)
+splreg x1 x7 3
+lw x7 66(x3)
+lw x8 67(x3)
+spadd x1 x7 1
+spadd x1 x8 2
+sw x0 66(x3)
+sw x0 67(x3)
+spli x1 0 6
+jmp SKIP
+WALK1
+slli x6 x2 2
+lw x7 16(x6)
+addi x7 x7 2
+splreg x1 x7 3
+lw x7 6(x0)
+sw x7 65(x3)
+lw x7 66(x3)
+lw x8 67(x3)
+spadd x1 x7 1
+spadd x1 x8 2
+spli x1 2 6
+jmp SKIP
+FIGHT2
+slli x6 x2 2
+lw x7 16(x6)
+splreg x1 x7 3
+spli x1 0 6
+lw x7 66(x3)
+lisp x7 x8 4
+beq x8 x0 SKIP
+lisp x1 x9 0
+li x10 5
+bne x9 x10 REGULARATTACK
+lisp x1 x9 7
+bne x9 x0 TEAM0
+li x10 63
+LOOPSELECTARROW
+lisp x10 x11 0
+bne x11 x0 NOTARROWCARD
+lisp x1 x11 1
+splreg x10 x11 1
+lisp x1 x11 2
+splreg x10 x11 2
+spli x10 0 3
+lisp x1 x11 5
+splreg x10 x11 5
+spli x10 0 6
+lisp x1 x11 7
+splreg x10 x11 7
+slli x11 x1 2
+lw x12 66(x11)
+slli x11 x10 2
+sw x12 66(x11)
+spli x10 2 0
+jmp SKIP
+NOTARROWCARD
+subi x10 x10 1
+bne x10 x0 LOOPSELECTARROW
+jmp SKIP
+TEAM0
+li x10 0
+LOOPSELECTARROW2
+lisp x10 x11 0
+bne x11 x0 NOTARROWCARD2
+lisp x1 x11 1
+splreg x10 x11 1
+lisp x1 x11 2
+splreg x10 x11 2
+spli x10 0 3
+lisp x1 x11 5
+splreg x10 x11 5
+spli x10 0 6
+lisp x1 x11 7
+splreg x10 x11 7
+slli x11 x1 2
+lw x12 66(x11)
+splreg x10 x12 4
+spli x10 2 0
+jmp SKIP
+NOTARROWCARD2
+addi x10 x10 1
+li x11 63
+bne x10 x11 LOOPSELECTARROW2
+jmp SKIP
+REGULARATTACK
+attack x7 x1 4 5
+jmp SKIP
+FIGHT1
+slli x6 x2 2
+lw x7 16(x6)
+addi x7 x7 4
+splreg x1 x7 3
+lw x7 6(x0)
+sw x7 65(x3)
+spli x1 4 6
+jmp SKIP
+NEEDTARGET
 lisp x1 x2 7
-li x3 0
-li x10 100000
+li x10 10000
 li x11 0
 li x12 0
+li x20 0
+li x3 2
+lisp x1 x4 0
+beq x4 x3 ARROW
+li x3 0
 FOR2
 beq x3 x1 SKIPINNER
-li x4 0
+lisp x3 x4 4
+beq x4 x0 SKIPINNER
 lisp x3 x5 0
+beq x5 x0 SKIPINNER
+li x4 2
 beq x5 x4 SKIPINNER
 lisp x3 x5 7
 beq x5 x2 SKIPINNER
@@ -34,31 +231,118 @@ bge x5 x10 SKIPINNER
 addi x10 x5 0
 lisp x3 x11 1
 lisp x3 x12 2
+addi x20 x3 0
 SKIPINNER
 addi x3 x3 1
+li x6 63
 bne x3 x6 FOR2
-li x13 100000
+li x13 10000
 beq x10 x13 SKIP
 lisp x1 x13 1
 lisp x1 x14 2
+jmp ARROWDONE
+ARROW
+slli x3 x1 2
+lisp x1 x13 1
+lisp x1 x14 2
+lisp x1 x20 4
+lisp x20 x6 0
+bne x6 x0 TARGETALIVE
+spli x1 0 0
+jmp SKIP
+TARGETALIVE
+lisp x20 x11 1
+lisp x20 x12 2
+abs x15 x13 x11
+abs x16 x14 x12
+add x18 x15 x16
+li x19 20
+bge x18 x19 HALFDONE
+attack x20 x1 4 5
+spli x1 0 0
+jmp SKIP
+ARROWDONE
 abs x15 x13 x11
 abs x16 x14 x12
 li x17 5
+add x18 x15 x16
+li x19 20
+lisp x1 x4 0
+li x3 5
+bne x3 x4 NOTARCHER
+li x19 100
+NOTARCHER
+blt x18 x19 GETFIGHTING
+lw x3 8(x0)
+blt x14 x3 TOPHALF
+bge x12 x3 HALFDONE
+subi x4 x3 10
+addi x12 x4 0
+lw x4 11(x0)
+blt x11 x4 LEFTBOT
+lw x11 9(x0)
+jmp HALFDONE
+LEFTBOT
+lw x11 7(x0)
+jmp HALFDONE
+TOPHALF
+blt x12 x3 HALFDONE
+addi x12 x3 0
+addi x12 x3 10
+lw x4 11(x0)
+blt x11 x4 LEFTTOP
+lw x11 9(x0)
+jmp HALFDONE
+LEFTTOP
+lw x11 7(x0)
+HALFDONE
+abs x15 x13 x11
+abs x16 x14 x12
+spli x1 1 6
+lisp x1 x2 0
+slli x6 x2 2
+lw x7 16(x6)
+addi x7 x7 1
+splreg x1 x7 3
+lw x7 6(x0)
+slli x3 x1 2
+sw x7 65(x3)
+li x4 2
+bne x4 x2 NOARROWCOUNTDOWN
+srli x7 x7 3
+sw x7 65(x3)
+NOARROWCOUNTDOWN
 blt x15 x16 IFVERT
 blt x11 x13 LEFT
-spadd x1 x17 1
+li x7 2
+sw x7 66(x3)
 jmp SKIP
 LEFT
-spsub x1 x17 1
+lw x7 5(x0)
+sw x7 66(x3)
 jmp SKIP
 IFVERT
 blt x12 x14 UP
-spadd x1 x17 2
+li x7 2
+sw x7 67(x3)
 jmp SKIP
 UP
-spsub x1 x17 2
+lw x7 5(x0)
+sw x7 67(x3)
+jmp SKIP
+GETFIGHTING
+spli x1 3 6
+slli x6 x2 2
+lw x7 16(x6)
+addi x7 x7 3
+splreg x1 x7 3
+lw x7 6(x0)
+slli x3 x1 2
+sw x7 65(x3)
+sw x20 66(x3)
+jmp SKIP
 SKIP
 addi x1 x1 1
+li x6 63
 bne x1 x6 FOR1
-wait 20000000
 jmp LOOP

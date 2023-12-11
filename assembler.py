@@ -128,6 +128,9 @@ for line in lines1:
             count+=1
 print(loops)
 print("count:",count)
+with open ("instructions2.txt","w") as f:
+    for line in lines:
+        f.write(line+"\n")
 with open('data/instructions.mem', 'w') as f:
     for line in lines:
         words=line.rstrip("\n").split(" ");
@@ -160,7 +163,7 @@ with open('data/instructions.mem', 'w') as f:
             rs1=words[2][words[2].find("(")+1:-1]
             offset=words[2][:words[2].find("(")]
             if words[1] not in registers or rs1 not in registers:
-                raise Exception("syntax error register not present: ",rs1)
+                raise Exception("syntax error register not present: ",rs1,words)
             f.write(tohex(binary(offset,12)+registers[rs1]+"010"+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="li"):
             if words[1] not in registers:
@@ -172,7 +175,7 @@ with open('data/instructions.mem', 'w') as f:
             f.write(tohex(binary(words[3],3)+"1"+binary("0",15)+registers[words[1]]+registers[words[2]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spli"):
             if words[1] not in registers:
-                raise Exception("syntax error register not present")
+                raise Exception("syntax error register not present",words)
             f.write(tohex(binary(words[3],3)+"1"+binary(words[2],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="lisp"):
             if words[1] not in registers or words[2] not in registers:
@@ -185,7 +188,7 @@ with open('data/instructions.mem', 'w') as f:
         elif (words[0]=="addi" or words[0]=="subi" or words[0]=="slli" or words[0]=="multi" or
               words[0]=="srli"):
             if words[1] not in registers or words[2] not in registers:
-                raise Exception("syntax error register not present")
+                raise Exception("syntax error register not present",words)
             f.write(tohex(binary(words[3],12)+registers[words[2]]+immediateinstr[words[0]]+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="spadd"):
             if words[1] not in registers or words[2] not in registers:
