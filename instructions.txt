@@ -28,6 +28,11 @@ sw x2 38(x0) // health of archer = 100
 sw x0 37(x0)
 //type 2
 sw x0 24(x0) //frame 0 for arrow
+//elixir
+li x31 5
+li x30 1
+li x2 50000
+sw x2 30(x0)
 
 //bridge locations 7,8 9,10
 li x2 5
@@ -155,7 +160,16 @@ li x3 9
 spli x3 0 5
 LOOP
 li x1 0
-
+li x2 8
+bge x30 x2 FULL
+    lw x2 12(x0)
+    bne x2 x0 NORESET
+        li x2 50000
+        addi x30 x30 1
+    NORESET
+    subi x2 x2 1
+    sw x2 12(x0)
+FULL
 //mouse edge detection
 //mouse1
 li x3 8
@@ -182,17 +196,20 @@ splreg x3 x2 5 //load current state to last state
 li x3 8
 lisp x3 x4 6 //load clicked bit to x4
 beq x4 x0 NODEPLOY
+    
     lw x5 0(x0) //x5 is hole card
     beq x5 x0 NODEPLOY //not selected any card
         lw x6 8(x0) //mid point
         lisp x3 x7 2 //get mouse1y
         blt x6 x7 NODEPLOY //wrong side (LOWER)
             lisp x3 x6 1 //get mouse1x
-            li x10 32
+            li x10 0
+            li x11 4
+            blt x30 x11 NODEPLOY 
+            subi x30 x30 4
             LOOPSELECTSPRITE
                 lisp x10 x11 0 //x11 = x10 type
                 bne x11 x0 NOTSPRITECARD
-                    
                     splreg x10 x6 1
                     splreg x10 x7 2
                     spli x10 0 3
