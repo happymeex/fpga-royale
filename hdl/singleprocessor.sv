@@ -83,6 +83,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   logic [6:0] instr;
   initial rb=0;
   initial wb=0;
+
   logic [31:0]memout;
   logic readstage;
   //memory
@@ -146,6 +147,8 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .doutb()      // RAM output data, width determined from RAM_WIDTH
   );
 logic [31:0] counter;
+logic [3:0] elixir0;
+logic [3:0] elixir1; 
 always_ff @(posedge pixel_clk_in) begin
     if (brx_mem_addr==0 && brx_mem_valid)begin
         count<=0;
@@ -170,25 +173,74 @@ always_ff @(posedge pixel_clk_in) begin
    // sprites[508]<=sprites[508] ? 1:isClicked2;
     if(new_frame) begin
         state<=0;
+        elixir0<=0;
+        elixir1<=1;
         counter<=0;
     end
     if (state<64) begin
-      // sprite_valid_ <= sprites[state<<3] != 0 && state==0;
-        if (sprites[state<<3]>0) begin
-       // if (state==0) begin
-            x_<=sprites[(state<<3)+1];
-            y_<=sprites[(state<<3)+2];
-         //   x_<=100;
-          //  y_<=500;
-            frame_<=sprites[(state<<3)+3];
-            sprite_valid_<=1;
-        end else begin
-            sprite_valid_<=0;
+        if (state==32) begin
+            if (elixir0==0) begin
+                if (sprites[state<<3]>0) begin
+                // if (state==0) begin
+                    x_<=sprites[(state<<3)+1];
+                    y_<=sprites[(state<<3)+2];
+                    //   x_<=100;
+                    //  y_<=500;
+                    frame_<=sprites[(state<<3)+3];
+                    sprite_valid_<=1;
+                end else begin
+                    sprite_valid_<=0;
+                end
+            end else if (elixir0<=8) begin
+                if (regs[30]>=elixir0) begin
+                    x_<=elixir0*75;
+                    y_<=0;
+                    frame_<=0;
+                    sprite_valid_<=1;
+                end else begin
+                    sprite_valid_<=0;
+                end
+            end else if (elixir1<=8) begin
+                if (regs[31]>=elixir1) begin
+                    x_<=elixir1*75;
+                    y_<=300;
+                    frame_<=0;
+                    sprite_valid_<=1;
+                end else begin
+                    sprite_valid_<=0;
+                end
+            end
+            counter<=counter+1;
+            if (counter>25000) begin
+                counter<=0;
+                if (elixir0<=8) begin
+                    elixir0<=elixir0+1;
+                end else if (elixir1<8)begin
+                    elixir1<=elixir1+1;
+                end
+                else begin
+                    state<=state+1;
+                end
+            end
         end
-        counter<=counter+1;
-        if (counter>25000) begin
-          counter<=0;
-          state<=state+1;
+        else begin
+        // sprite_valid_ <= sprites[state<<3] != 0 && state==0;
+            if (sprites[state<<3]>0) begin
+        // if (state==0) begin
+                x_<=sprites[(state<<3)+1];
+                y_<=sprites[(state<<3)+2];
+            //   x_<=100;
+            //  y_<=500;
+                frame_<=sprites[(state<<3)+3];
+                sprite_valid_<=1;
+            end else begin
+                sprite_valid_<=0;
+            end
+            counter<=counter+1;
+            if (counter>25000) begin
+            counter<=0;
+            state<=state+1;
+            end
         end
     end
     else begin
