@@ -5,6 +5,7 @@ module top_level(
   input wire clk_100mhz,
   input wire [3:0] btn,
   inout wire [7:0] pmodb,
+  inout wire [7:0] pmoda,
   input wire [15:0] sw, //all 16 input slide switches
   output logic [3:0] ss0_an,//anode control for upper four digits of seven-seg display
 	output logic [3:0] ss1_an,//anode control for lower four digits of seven-seg display
@@ -44,13 +45,20 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
-  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x;
-  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y;
-  logic click;
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_a;
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_a;
+  logic click_a;
   logic ps2_clk_a;
   logic ps2_data_a;
-  assign ps2_clk_a = pmodb[2];
-  assign ps2_data_a = pmodb[0];
+  assign ps2_clk_a = pmoda[2];
+  assign ps2_data_a = pmoda[0];
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_b;
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_b;
+  logic click_b;
+  logic ps2_clk_b;
+  logic ps2_data_b;
+  assign ps2_clk_b = pmodb[2];
+  assign ps2_data_b = pmodb[0];
 
   logic [6:0] ss_c;
   logic [29:0] blah;
@@ -63,7 +71,7 @@ module top_level(
   logic [31:0]val_in;
   seven_segment_controller mssc(.clk_in(buf_clk),
                                   .rst_in(sys_rst),
-                                  .val_in({click,mouse_x,2'b0,mouse_y}),
+                                  .val_in({click_a,mouse_x_a,2'b0,mouse_y_a}),
                                   .cat_out(ss_c),
                                   .an_out({ss0_an, ss1_an}));
   assign ss0_c = ss_c; //control upper four digit's cathodes!
@@ -86,12 +94,12 @@ module top_level(
     .y(sprite_y),
     .frame(sprite_frame),
     .sprite_valid(sprite_valid),
-    .mouse1x(mouse_x),
-    .mouse1y(mouse_y),
-    .isClicked1(click),
-    .mouse2x(0),
-    .mouse2y(0),
-    .isClicked2(0),
+    .mouse1x(mouse_x_a),
+    .mouse1y(mouse_y_a),
+    .isClicked1(click_a),
+    .mouse2x(mouse_x_b),
+    .mouse2y(mouse_y_b),
+    .isClicked2(click_b),
     .isOn(sw[0]),
     .uart_rx_in(uart_rxd),
     .go(btn[3])
@@ -128,10 +136,6 @@ module top_level(
     .sprite_valid(sprite_valid),
     .sprite_x(sprite_x),
     .sprite_y(sprite_y),
-    //.sprite_x(300),
-    //.sprite_y(200),
-   // .sprite_x(mouse_x),
-   // .sprite_y(mouse_y),
     .sprite_frame_number(sprite_frame),
     .sprite_ready(),
     .hdmi_tx_p(hdmi_tx_p),
@@ -139,7 +143,6 @@ module top_level(
     .hdmi_clk_p(hdmi_clk_p),
     .hdmi_clk_n(hdmi_clk_n)
   );
-
 
 mouse_iface #(
   .CANVAS_WIDTH(CANVAS_WIDTH),
@@ -149,9 +152,22 @@ mouse_iface #(
   .ps2_clk(ps2_clk_a),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_a),
-  .mouse_x(mouse_x),
-  .mouse_y(mouse_y),
-  .click(click)
+  .mouse_x(mouse_x_a),
+  .mouse_y(mouse_y_a),
+  .click(click_a)
+);
+
+mouse_iface #(
+  .CANVAS_WIDTH(CANVAS_WIDTH),
+  .CANVAS_HEIGHT(CANVAS_HEIGHT)
+) ms_b (
+  .clk_in(buf_clk),
+  .ps2_clk(ps2_clk_b),
+  .rst_in(sys_rst),
+  .ps2_data(ps2_data_b),
+  .mouse_x(mouse_x_b),
+  .mouse_y(mouse_y_b),
+  .click(click_b)
 );
 // logic [3:0] counter;
 // logic [5:0] prev_frame_count;
