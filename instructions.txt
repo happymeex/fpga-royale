@@ -93,7 +93,7 @@ spli x2 1 0
 spli x2 40 1
 spli x2 620 2
 spli x2 22 3
-spli x2 1000 4
+spli x2 255 4
 spli x2 30 5
 spli x2 0 6
 spli x2 1 7
@@ -106,7 +106,7 @@ spli x2 1 0
 spli x2 260 1
 spli x2 620 2
 spli x2 22 3
-spli x2 1000 4
+spli x2 255 4
 spli x2 30 5
 spli x2 0 6
 spli x2 1 7
@@ -120,7 +120,7 @@ spli x2 1 0
 spli x2 50 1
 spli x2 80 2
 spli x2 22 3
-spli x2 1000 4
+spli x2 255 4
 spli x2 30 5 
 spli x2 0 6
 spli x2 0 7
@@ -133,7 +133,7 @@ spli x2 1 0
 spli x2 260 1
 spli x2 80 2
 spli x2 22 3
-spli x2 1000 4
+spli x2 255 4
 spli x2 30 5 
 spli x2 0 6
 spli x2 0 7
@@ -141,30 +141,30 @@ slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
 //sprite 3
-addi x2 x0 12 //x2=2
-spli x2 2 0
-spli x2 100 1
-spli x2 100 2
-spli x2 0 3
-spli x2 0 4 
-spli x2 5 5 
-spli x2 0 6
-spli x2 0 7
-slli x3 x2 2
-sw x0 65(x3) //countdown is 0
+//addi x2 x0 12 //x2=2
+//spli x2 2 0
+//spli x2 100 1
+//spli x2 100 2
+//spli x2 0 3
+//spli x2 0 4 
+//spli x2 5 5 
+//spli x2 0 6
+//spli x2 0 7
+//slli x3 x2 2
+//sw x0 65(x3) //countdown is 0
 
 //sprite 4
-addi x2 x0 4 //x2=4
-spli x2 4 0
-spli x2 0 1
-spli x2 0 2
-spli x2 0 3
-spli x2 100 4
-spli x2 5 5 
-spli x2 0 6
-spli x2 0 7
-slli x3 x2 2
-sw x0 65(x3) //countdown is 0
+//addi x2 x0 4 //x2=4
+//spli x2 4 0
+//spli x2 0 1
+//spli x2 0 2
+//spli x2 0 3
+//spli x2 100 4
+//spli x2 5 5 
+//spli x2 0 6
+//spli x2 0 7
+//slli x3 x2 2
+//sw x0 65(x3) //countdown is 0
 
 //p0
 //hole card barb
@@ -301,6 +301,8 @@ li x3 8
 spli x3 0 5
 li x3 9
 spli x3 0 5
+li x28 2 //player 0 towers
+li x29 2 //player 1 towers
 LOOP
 li x1 0
 li x2 8
@@ -452,7 +454,6 @@ NODEPLOY2
 //li x2 7
 //sw x2 1(x0) //save 0 to 0
 FOR1 //loop through all sprites with x1
-
     lisp x1 x2 0 //x2 is type
     beq x2 x0 SKIP//skip if not valid
     li x3 6
@@ -494,7 +495,20 @@ FOR1 //loop through all sprites with x1
     lisp x1 x3 4 //x3=health
     bne x3 x0 ALIVE
         //dead
+        li x2 1
+        lisp x1 x3 0 //type of sprite
         spli x1 0 0 //kill sprite
+        bne x3 x2 NOTTOWERDEAD
+            lisp x1 x3 7 //x3 = team
+            bne x3 x0 TEAM1TOWER
+                //team0
+                subi x28 x28 1
+                beq x28 x0 GAMEOVER
+                jmp SKIP
+            TEAM1TOWER
+                subi x29 x29 1
+                beq x29 x0 GAMEOVER
+        NOTTOWERDEAD
         jmp SKIP
     ALIVE
     ARROWALIVE
@@ -703,8 +717,11 @@ FOR1 //loop through all sprites with x1
         li x7 8
         bne x7 x5 NOTBAT
             //target is bat
+            li x7 8
+            beq x7 x6 BATONBAT //bat can hit bat
             li x7 1
-            bne x6 x7 SKIPINNER //only tower can hit bat
+            bne x6 x7 SKIPINNER //only tower can hit bat otherwise
+            BATONBAT
         NOTBAT
         li x6 6 //mouse
         beq x6 x5 SKIPINNER
@@ -756,7 +773,7 @@ FOR1 //loop through all sprites with x1
     abs x16 x14 x12
     li x17 5
     add x18 x15 x16
-    li x19 20 //50 is close enough
+    li x19 50 //50 is close enough
     lisp x1 x4 0 //x4 is type
     li x3 1
     bne x3 x4 NOTTOWER
@@ -770,6 +787,9 @@ FOR1 //loop through all sprites with x1
     NOTARCHER
 
     blt x18 x19 GETFIGHTING
+        li x3 8
+        lisp x1 x4 0
+        beq x3 x4 HALFDONE
         //no fighting
         lw x3 8(x0)//x3 = y midpoint
         blt x14 x3 TOPHALF
@@ -876,3 +896,42 @@ FOR1 //loop through all sprites with x1
     li x6 64
 bne x1 x6 FOR1 //END FOR1
 jmp LOOP
+GAMEOVER
+bne x28 x0 WIN0
+    //team 1 wins
+    li x3 3
+    spli x3 1 0
+    spli x3 100 1
+    spli x3 500 2
+    spli x3 19 3
+    li x3 4
+    spli x3 1 0
+    spli x3 150 1
+    spli x3 500 2
+    spli x3 20 3
+    li x3 5
+    spli x3 1 0
+    spli x3 200 1
+    spli x3 500 2
+    spli x3 21 3
+    jmp LOOP2
+WIN0
+    //team 0 wins
+    li x3 3
+    spli x3 1 0
+    spli x3 100 1
+    spli x3 200 2
+    spli x3 19 3
+    li x3 4
+    spli x3 1 0
+    spli x3 150 1
+    spli x3 200 2
+    spli x3 20 3
+    li x3 5
+    spli x3 1 0
+    spli x3 200 1
+    spli x3 200 2
+    spli x3 21 3
+
+LOOP2
+jmpLOOP2

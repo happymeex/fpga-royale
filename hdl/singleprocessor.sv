@@ -28,7 +28,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   output logic [7:0] hp00,
   output logic [7:0] hp01,
   output logic [7:0] hp10,
-  output logic [7:0] hp11,
+  output logic [7:0] hp11
   );
   //register file
   /*
@@ -170,7 +170,7 @@ always_ff @(posedge pixel_clk_in) begin
         hp00<=sprites[4];
         hp01<=sprites[12];
         hp10<=sprites[484];
-        hp11<=sprites[492]
+        hp11<=sprites[492];
     // sprites[64]<=6;
     // sprites[65]<=mouse1x;
     // sprites[66]<=mouse1y;

@@ -15,7 +15,7 @@ module graphics #(
   parameter HEIGHT = 720,
   parameter CANVAS_WIDTH = 360,
   parameter CANVAS_HEIGHT = 720,
-  parameter PALETTE_SIZE = 8
+  parameter PALETTE_SIZE = 8,
   parameter TRANSPARENT_COLOR_INDEX = 0
 )(
   input wire sys_rst,

@@ -60,10 +60,10 @@ module top_level(
   logic ps2_data_b;
   assign ps2_clk_b = pmodb[2];
   assign ps2_data_b = pmodb[0];
-  logic [7:0] hp00,
-  logic [7:0] hp01,
-  logic [7:0] hp10,
-  logic [7:0] hp11,
+  logic [7:0] hp00;
+  logic [7:0] hp01;
+  logic [7:0] hp10;
+  logic [7:0] hp11;
   logic [6:0] ss_c;
   // logic test_clk;
   // initial test_clk = 1;
@@ -71,14 +71,14 @@ module top_level(
   //   if (ps2_clk_a == 0) test_clk <= 0;
   // end
   logic [31:0]val_in;
-  assign val_in<={hp00,hp01,hp10,hp11};
+  assign val_in={hp00,hp01,hp10,hp11};
   seven_segment_controller mssc(.clk_in(buf_clk),
                                   .rst_in(sys_rst),
                                   .val_in(val_in),
                                   .cat_out(ss_c),
                                   .an_out({ss0_an, ss1_an}));
-  //assign ss0_c = ss_c; //control upper four digit's cathodes!
-//  assign ss1_c = ss_c; //same as above but for lower four digits!
+  assign ss0_c = ss_c; //control upper four digit's cathodes!
+  assign ss1_c = ss_c; //same as above but for lower four digits!
 
   singleprocessor #(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),

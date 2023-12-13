@@ -167,7 +167,7 @@ with open('data/instructions.mem', 'w') as f:
             f.write(tohex(binary(offset,12)+registers[rs1]+"010"+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="li"):
             if words[1] not in registers:
-                raise Exception("syntax error register not present")
+                raise Exception("syntax error register not present",words)
             f.write(tohex(binary(words[2],20)+registers[words[1]]+instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="splreg"):
             if words[1] not in registers or words[2] not in registers:
@@ -208,7 +208,7 @@ with open('data/instructions.mem', 'w') as f:
             f.write(tohex(binary(words[3],3)+"1"+"010000000000"+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="abs" or words[0]=="add" or words[0]=="sub" or words[0]=="sll" or words[0]=="mult" or words[0]=="srl"):
             if words[1] not in registers or words[2] not in registers or words[3] not in registers:
-                raise Exception("syntax error register not present")
+                raise Exception("syntax error register not present",words)
             f.write(tohex(regreginstr[words[0]]+registers[words[3]]+registers[words[2]]+"000"+registers[words[1]] + instructions[words[0]],INSTRUCTION_SIZE)+"\n")
         elif (words[0]=="beq" or words[0]=="bne" or words[0]=="bge" or words[0]=="blt"):
             #words[3]=words[3][1:] #first char is !
