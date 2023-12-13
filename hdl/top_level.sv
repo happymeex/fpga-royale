@@ -37,7 +37,7 @@ module top_level(
   hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
           .reset(0), .locked(locked), .clk_ref(buf_clk));
   
-  localparam NUM_FRAMES = 18;
+  localparam NUM_FRAMES = 28;
   localparam CANVAS_HEIGHT = 720;
   localparam CANVAS_WIDTH = 360;
   localparam PALETTE_SIZE = 16;
@@ -62,29 +62,27 @@ module top_level(
   assign ps2_data_b = pmodb[0];
 
   logic [6:0] ss_c;
-  logic [29:0] blah;
   // logic test_clk;
   // initial test_clk = 1;
   // always_ff @( posedge buf_clk ) begin
   //   if (ps2_clk_a == 0) test_clk <= 0;
   // end
-  assign blah = 0;
-  logic [31:0]val_in;
-  seven_segment_controller mssc(.clk_in(buf_clk),
-                                  .rst_in(sys_rst),
-                                  .val_in({click_b[1],4'b0,mouse_x_a[1],2'b0,mouse_y_a[1]}),
-                                  .cat_out(ss_c),
-                                  .an_out({ss0_an, ss1_an}));
-  assign ss0_c = ss_c; //control upper four digit's cathodes!
-  assign ss1_c = ss_c; //same as above but for lower four digits!
+  //logic [31:0]val_in;
+  // seven_segment_controller mssc(.clk_in(buf_clk),
+  //                                 .rst_in(sys_rst),
+  //                                 .val_in({click_b[1],4'b0,mouse_x_a[1],2'b0,mouse_y_a[1]}),
+  //                                 .cat_out(ss_c),
+  //                                 .an_out({ss0_an, ss1_an}));
+  //assign ss0_c = ss_c; //control upper four digit's cathodes!
+//  assign ss1_c = ss_c; //same as above but for lower four digits!
 
   singleprocessor #(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
     .NUM_FRAMES(NUM_FRAMES),
-    .INSTRUCTIONS_SIZE(800),
+    .INSTRUCTIONS_SIZE(750),
     .MAX_SPRITES(64),
-    .MEMORY_SIZE(500),
+    .MEMORY_SIZE(320),
     .INSTRUCTION_WIDTH(36),
     .ROW_SIZE(1280) // not used for now
   ) pr (

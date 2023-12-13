@@ -17,12 +17,12 @@ sw x2 4(x0)
 
 //sprite sheets
 // type 4
-li x2 2
+li x2 4
 sw x2 32(x0) //frame 0 for barb
 li x2 3
 sw x2 35(x0) //elixir for barb
 // type 5
-li x2 6
+li x2 12
 sw x2 36(x0) //frame 0 for archer
 li x2 2
 sw x2 39(x0) //elixir for archer
@@ -30,18 +30,21 @@ li x2 7
 sw x2 37(x0) //damage of archer = 5
 li x2 100
 sw x2 38(x0) // health of archer = 100
+//type 1
+li x2 2
+sw x2 20(x0)
 
 //type 7
 li x2 5
 sw x2 47(x0) //elixir for giant
-li x2 10
+li x2 20
 sw x2 44(x0) //frame for giant
 
 //type 2
-li x2 15
+li x2 3
 sw x2 24(x0) //frame 0 for arrow
 
-li x2 14
+li x2 2
 sw x2 20(x0) //frame 0 for building
 
 //elixir
@@ -65,24 +68,24 @@ sw x2 11(x0)
 
 //3 is reserved for mouse localparam
 //mice
-//li x2 62
-li x2 8
+li x2 62
+//li x2 8
 sw x2 3(x0) //save to mem 3
 sw x0 0(x0) //clear x0
 
 
-//li x2 63
-li x2 9
+li x2 63
+//li x2 9
 spli x2 1 3
-sw x0 1(x0)
+sw x0 1(x0) //clear mem 1
 
 //player 1
 //sprite 0 building
-li x2 63 //x2=0
+li x2 61 //x2=0
 spli x2 1 0
 spli x2 40 1
 spli x2 620 2
-spli x2 14 3
+spli x2 2 3
 spli x2 1000 4
 spli x2 30 5
 spli x2 0 6
@@ -91,11 +94,11 @@ slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
 //sprite 0 building
-li x2 62 //x2=0
+li x2 60 //x2=0
 spli x2 1 0
 spli x2 260 1
 spli x2 620 2
-spli x2 14 3
+spli x2 2 3
 spli x2 1000 4
 spli x2 30 5
 spli x2 0 6
@@ -109,7 +112,7 @@ addi x2 x0 1 //x2=1 building
 spli x2 1 0
 spli x2 50 1
 spli x2 80 2
-spli x2 14 3
+spli x2 2 3
 spli x2 1000 4
 spli x2 30 5 
 spli x2 0 6
@@ -122,7 +125,7 @@ addi x2 x0 3 //x2=3 building
 spli x2 1 0
 spli x2 260 1
 spli x2 80 2
-spli x2 14 3
+spli x2 2 3
 spli x2 1000 4
 spli x2 30 5 
 spli x2 0 6
@@ -197,6 +200,7 @@ li x3 7
 slli x3 x3 2
 lw x4 16(x3)
 splreg x2 x4 3
+
 spli x2 500 4
 spli x2 15 5 
 spli x2 7 6 //7 =giant
@@ -283,7 +287,7 @@ bge x31 x2 FULL1
 FULL1
 //mouse edge detection
 //mouse1
-li x3 8
+li x3 62
 lisp x3 x2 4 //x2 current state
 lisp x3 x4 5 //last state
 spli x3 0 6
@@ -294,7 +298,7 @@ NOCLICK1
 splreg x3 x2 5 //load current state to last state
 
 //mouse2
-li x3 9
+li x3 63
 lisp x3 x2 4 //x2 current state
 lisp x3 x4 5 //last state
 spli x3 0 6
@@ -304,7 +308,8 @@ spli x3 1 6
 NOCLICK2
 splreg x3 x2 5 //load current state to last state
 
-li x3 8
+//team 0
+li x3 62
 lisp x3 x4 6 //load clicked bit to x4
 beq x4 x0 NODEPLOY
     
@@ -327,7 +332,6 @@ beq x4 x0 NODEPLOY
                 bne x11 x0 NOTSPRITECARD
                     splreg x10 x6 1
                     splreg x10 x7 2
-                    spli x10 0 3
                     lisp x5 x11 4
                     splreg x10 x11 4
                     lisp x5 x11 5
@@ -343,6 +347,7 @@ beq x4 x0 NODEPLOY
                     lisp x5 x11 6 //x11 = type
                     slli x12 x11 2
                     lw x12 16(x12)
+                    addi x12 x12 2
                     splreg x10 x12 3
                     splreg x10 x11 0
                     jmp ENDDEPLOY
@@ -354,7 +359,7 @@ beq x4 x0 NODEPLOY
     
 NODEPLOY
 
-li x3 9
+li x3 63
 lisp x3 x4 6 //load clicked bit to x4
 beq x4 x0 NODEPLOY2
     
@@ -406,7 +411,6 @@ NODEPLOY2
 
 //0 = ismouse1clicked selection
 //1 = ismouse2clicked selection
-
 //li x2 7
 //sw x2 1(x0) //save 0 to 0
 FOR1 //loop through all sprites with x1
@@ -421,12 +425,12 @@ FOR1 //loop through all sprites with x1
         lisp x1 x3 7 //team 
           beq x3 x0 HOLETEAM0
                 //team 1
-                li x3 9
+                li x3 63
                 li x11 1
                 jmp HOLETEAM1
             HOLETEAM0
                 //team0
-                li x3 8
+                li x3 62
                 li x11 0
             HOLETEAM1
             lisp x3 x4 6 //load clicked bit to x4    
@@ -479,8 +483,15 @@ FOR1 //loop through all sprites with x1
                         jmp SKIP
                     WALK2
                     slli x6 x2 2 
-                    lw x7 16(x6) //load base frame to x7
-                    splreg x1 x7 3 //change frame to base
+              //      lw x7 16(x6) //load base frame to x7
+                    lisp x1 x8 0
+                    li x9 2
+                    beq x8 x9 ARROWNOWALK
+                        li x8 5
+                        spsub x1 x8 3 //decrement by 5
+                      //  splreg x1 x7 3 //change frame to base
+                    ARROWNOWALK
+                    
                     lw x7 66(x3) //load dx
                     lw x8 67(x3) //load dy
                     //change position
@@ -505,9 +516,11 @@ FOR1 //loop through all sprites with x1
                         srli x7 x7 3
                         jmp ARROWWALK
                     NOTARROWWALK
-                        lw x8 16(x6) //load base frame to x7
-                        addi x8 x8 3 //walking2 is 3+base
-                        splreg x1 x8 3 //change frame to walking2
+           //             lw x8 16(x6) //load base frame to x7
+            //             addi x8 x8 3 //walking2 is 3+base
+           //             splreg x1 x8 3 //change frame to walking2
+                        li x8 1
+                        spadd x1 x8 3 //increment by 1
                     ARROWWALK
                     
                     sw x7 65(x3) //change countdown
@@ -520,8 +533,9 @@ FOR1 //loop through all sprites with x1
                 jmp SKIP
             FIGHT2
                 slli x6 x2 2 
-                lw x7 16(x6) //load base frame to x7
-                splreg x1 x7 3 //change frame to base
+                
+         //       lw x7 16(x6) //load base frame to x7
+           //     splreg x1 x7 3 //change frame to base
                 spli x1 0 6 //state is 0 (idle)
                 lw x7 66(x3) //load target
                 lisp x7 x8 4 //x8=target health
@@ -534,6 +548,8 @@ FOR1 //loop through all sprites with x1
                 li x11 1
                 beq x9 x11 TOWERATTACK //tower
                 bne x9 x10 REGULARATTACK
+                    li x7 1
+                    spsub x1 x7 3 //decrement frame by 1
                 TOWERATTACK
                 //archer
                 lisp x1 x9 7 //x9 = team
@@ -603,14 +619,21 @@ FOR1 //loop through all sprites with x1
                     bne x10 x11 LOOPSELECTARROW2
                     jmp SKIP
                 REGULARATTACK
+                li x7 1
+                spsub x1 x7 3 //decrement frame by 1
                 attack x7 x1 4 5 //attack!
             jmp SKIP
         FIGHT1
             lisp x1 x2 0
             slli x6 x2 2 
             lw x7 16(x6) //load base frame to x7
-            addi x7 x7 0 //fighting2 is base
-            splreg x1 x7 3 //change frame to fighting2
+            lisp x1 x8 3
+            beq x7 x8 NOOTHERFRAME
+                li x7 1
+                spsub x1 x7 3
+            NOOTHERFRAME
+           // addi x7 x7 0 //fighting2 is base
+            //splreg x1 x7 3 //change frame to fighting2
             lw x7 4(x0) 
             sw x7 65(x3) //change countdown
             spli x1 4 6 //state is 4 (FIGHTING2)
@@ -751,6 +774,10 @@ FOR1 //loop through all sprites with x1
             jmp ARROWCOUNTDOWN
         NOARROWCOUNTDOWN
             lw x8 16(x6) //load base frame to x8
+         //   bge x12 x14 DOWNFRAME
+                //upframe
+         //       addi x8 x8 2
+         //   DOWNFRAME
             addi x8 x8 2 //walking1 is 2+base
             splreg x1 x8 3 //change frame to walking1
             
@@ -784,15 +811,17 @@ FOR1 //loop through all sprites with x1
         spli x1 3 6 //state is 3 (fighting 1)
         lisp x1 x2 0
         slli x6 x2 2 
-        lw x7 16(x6) //load base frame to x7
+        //lw x7 16(x6) //load base frame to x7
         slli x3 x1 2
         li x4 2
         beq x4 x2 NOARROWATTACK1
         li x4 1
         beq x4 x2 NOARROWATTACK1 //tower
-        addi x7 x7 1 //fighting1 is 1+base
+            li x7 1
+            spadd x1 x7 3 //fighting1 is 1+base
+   //     addi x7 x7 1 //fighting1 is 1+base
         NOARROWATTACK1
-        splreg x1 x7 3 //change frame to fighting1
+  //      splreg x1 x7 3 //change frame to fighting1
         lw x7 4(x0) 
         slli x3 x1 2
         sw x7 65(x3) //change countdown

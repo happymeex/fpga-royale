@@ -88,7 +88,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   logic readstage;
   //memory
    xilinx_single_port_ram_read_first #(
-    .RAM_WIDTH(32),                       // Specify RAM data width
+    .RAM_WIDTH(16),                       // Specify RAM data width
     .RAM_DEPTH(MEMORY_SIZE),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("LOW LATENCY"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
     .INIT_FILE()          // Specify name/location of RAM initialization file if using one (leave blank if not)
@@ -155,14 +155,22 @@ always_ff @(posedge pixel_clk_in) begin
         nop<=1;
     end
     if (isOn) begin
-    sprites[64]<=6;
-    sprites[65]<=mouse1x;
-    sprites[66]<=mouse1y;
-    sprites[68]<=isClicked1;
-    sprites[72]<=6;
-    sprites[73]<=mouse2x;
-    sprites[74]<=mouse2y;
-    sprites[76]<=isClicked2;
+        sprites[496]<=6;
+        sprites[497]<=mouse1x;
+        sprites[498]<=mouse1y;
+        sprites[500]<=isClicked1;
+        sprites[504]<=6;
+        sprites[505]<=mouse2x;
+        sprites[506]<=mouse2y;
+        sprites[508]<=isClicked2;
+    // sprites[64]<=6;
+    // sprites[65]<=mouse1x;
+    // sprites[66]<=mouse1y;
+    // sprites[68]<=isClicked1;
+    // sprites[72]<=6;
+    // sprites[73]<=mouse2x;
+    // sprites[74]<=mouse2y;
+    // sprites[76]<=isClicked2;
     // sprites[496]<=6;
     // sprites[497]<=mouse1x;
     // sprites[498]<=mouse1y;
@@ -178,7 +186,7 @@ always_ff @(posedge pixel_clk_in) begin
         counter<=0;
     end
     if (state<64) begin
-        if (state==32) begin
+        if (state==63) begin
             if (elixir0==0) begin
                 if (sprites[state<<3]>0) begin
                 // if (state==0) begin
@@ -195,7 +203,7 @@ always_ff @(posedge pixel_clk_in) begin
                 if (regs[30]>=elixir0) begin
                     x_<=elixir0*40-40;
                     y_<=0;
-                    frame_<=16;
+                    frame_<=36;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
@@ -204,7 +212,7 @@ always_ff @(posedge pixel_clk_in) begin
                 if (regs[31]>=elixir1) begin
                     x_<=elixir1*40-40;
                     y_<=CANVAS_HEIGHT-20;
-                    frame_<=16;
+                    frame_<=36;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
