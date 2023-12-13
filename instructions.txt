@@ -5,10 +5,10 @@ li x2 65535
 slli x2 x2 16
 add x2 x2 x1
 //x2 is -5
-subi x2 x2 3
+subi x2 x2 4
 //5 is reserved for -2
 sw x2 5(x0)
-li x2 2000 //countdown!!!
+li x2 1000 //countdown!!!
 //6 is reserved for walk countdown
 sw x2 6(x0)
 li x2 10000
@@ -19,15 +19,24 @@ sw x2 4(x0)
 // type 4
 li x2 2
 sw x2 32(x0) //frame 0 for barb
+li x2 3
+sw x2 35(x0) //elixir for barb
 // type 5
 li x2 6
 sw x2 36(x0) //frame 0 for archer
-li x2 5
+li x2 2
+sw x2 39(x0) //elixir for archer
+li x2 7
 sw x2 37(x0) //damage of archer = 5
 li x2 100
 sw x2 38(x0) // health of archer = 100
 
-sw x0 37(x0)
+//type 7
+li x2 5
+sw x2 47(x0) //elixir for giant
+li x2 10
+sw x2 44(x0) //frame for giant
+
 //type 2
 li x2 15
 sw x2 24(x0) //frame 0 for arrow
@@ -84,7 +93,7 @@ sw x0 65(x3) //countdown is 0
 //sprite 0 building
 li x2 62 //x2=0
 spli x2 1 0
-spli x2 280 1
+spli x2 260 1
 spli x2 620 2
 spli x2 14 3
 spli x2 1000 4
@@ -99,7 +108,7 @@ sw x0 65(x3) //countdown is 0
 addi x2 x0 1 //x2=1 building
 spli x2 1 0
 spli x2 50 1
-spli x2 100 2
+spli x2 80 2
 spli x2 14 3
 spli x2 1000 4
 spli x2 30 5 
@@ -108,22 +117,21 @@ spli x2 0 7
 slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
-//sprite 20
-addi x2 x0 8 //x2=3
-spli x2 4 0
-spli x2 200 1
-spli x2 300 2
-spli x2 0 3
-spli x2 100 4
-spli x2 5 5 
+//sprite 3
+addi x2 x0 3 //x2=3 building
+spli x2 1 0
+spli x2 260 1
+spli x2 80 2
+spli x2 14 3
+spli x2 1000 4
+spli x2 30 5 
 spli x2 0 6
 spli x2 0 7
 slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
-
 //sprite 3
-addi x2 x0 2 //x2=2
+addi x2 x0 12 //x2=2
 spli x2 2 0
 spli x2 100 1
 spli x2 100 2
@@ -136,7 +144,7 @@ slli x3 x2 2
 sw x0 65(x3) //countdown is 0
 
 //sprite 4
-addi x2 x0 3 //x2=4
+addi x2 x0 4 //x2=4
 spli x2 4 0
 spli x2 0 1
 spli x2 0 2
@@ -179,6 +187,22 @@ spli x2 15 5
 spli x2 5 6 //5 =archer
 spli x2 0 7
 
+//hole card giant
+//sprite 11
+addi x2 x0 11 //x2=11
+spli x2 3 0
+spli x2 200 1
+spli x2 20 2
+li x3 7
+slli x3 x3 2
+lw x4 16(x3)
+splreg x2 x4 3
+spli x2 500 4
+spli x2 15 5 
+spli x2 7 6 //7 =giant
+spli x2 0 7
+
+
 //p1
 //hole card barb
 //sprite 7
@@ -210,6 +234,21 @@ spli x2 15 5
 spli x2 5 6 //5 =archer
 spli x2 1 7
 
+//hole card giant
+//sprite 12
+addi x2 x0 12 //x2=12
+spli x2 3 0
+spli x2 200 1
+spli x2 660 2
+li x3 7
+slli x3 x3 2
+lw x4 16(x3)
+splreg x2 x4 3
+spli x2 500 4
+spli x2 15 5 
+spli x2 7 6 //7 =giant
+spli x2 1 7
+
 
 
 li x1 0
@@ -226,7 +265,7 @@ li x2 8
 bge x30 x2 FULL0
     lw x2 12(x0)
     bne x2 x0 NORESET0
-        li x2 10000
+        li x2 30000
         addi x30 x30 1
     NORESET0
     subi x2 x2 1
@@ -236,7 +275,7 @@ li x2 8
 bge x31 x2 FULL1
     lw x2 13(x0)
     bne x2 x0 NORESET1
-        li x2 10000
+        li x2 30000
         addi x31 x31 1
     NORESET1
     subi x2 x2 1
@@ -274,11 +313,15 @@ beq x4 x0 NODEPLOY
         lw x6 8(x0) //mid point
         lisp x3 x7 2 //get mouse1y
         blt x6 x7 NODEPLOY //wrong side (LOWER)
+            li x6 100
+            bge x6 x7 NODEPLOY //cannot deploy in hole cards
             lisp x3 x6 1 //get mouse1x
             li x10 0
-            li x11 4
+            lisp x5 x11 6 //x11 = type
+            slli x11 x11 2
+            lw x11 19(x11)
             blt x30 x11 NODEPLOY 
-            subi x30 x30 4
+            sub x30 x30 x11
             LOOPSELECTSPRITE
                 lisp x10 x11 0 //x11 = x10 type
                 bne x11 x0 NOTSPRITECARD
@@ -320,11 +363,15 @@ beq x4 x0 NODEPLOY2
         lw x6 8(x0) //mid point
         lisp x3 x7 2 //get mouse2y
         bge x6 x7 NODEPLOY2 //wrong side (UPPER)
+            li x6 660
+            blt x6 x7 NODEPLOY //cannot deploy in hole cards
             lisp x3 x6 1 //get mouse2x
             li x10 63
-            li x11 4
-            blt x31 x11 NODEPLOY2
-            subi x31 x31 4
+            lisp x5 x11 6 //x11 = type
+            slli x11 x11 2
+            lw x11 19(x11)
+            blt x31 x11 NODEPLOY 
+            sub x31 x31 x11
             LOOPSELECTSPRITE2
                 lisp x10 x11 0 //x11 = x10 type
                 bne x11 x0 NOTSPRITECARD2
@@ -449,15 +496,20 @@ FOR1 //loop through all sprites with x1
                     
                     lisp x1 x8 0 //x8 = type
                     li x9 2
+                    li x22 7
+                    lw x7 6(x0) 
+                    bne x8 x22 NOGIANTWALK
+                        slli x7 x7 2
+                    NOGIANTWALK
                     bne x8 x9 NOTARROWWALK
-                        srli x7 x7 1
+                        srli x7 x7 3
                         jmp ARROWWALK
                     NOTARROWWALK
-                        lw x7 16(x6) //load base frame to x7
-                        addi x7 x7 3 //walking2 is 3+base
-                        splreg x1 x7 3 //change frame to walking2
+                        lw x8 16(x6) //load base frame to x7
+                        addi x8 x8 3 //walking2 is 3+base
+                        splreg x1 x8 3 //change frame to walking2
                     ARROWWALK
-                    lw x7 6(x0) 
+                    
                     sw x7 65(x3) //change countdown
                     lw x7 66(x3) //load dx
                     lw x8 67(x3) //load dy
@@ -581,6 +633,12 @@ FOR1 //loop through all sprites with x1
         beq x4 x0 SKIPINNER
         lisp x3 x5 0 //x5=type
         beq x5 x0 SKIPINNER //dead sprite
+        lisp x1 x6 0 //x6 = x1 type
+        li x7 7
+        bne x7 x6 NOTGIANT
+            li x7 1
+            bne x5 x7 SKIPINNER //target needs to be building
+        NOTGIANT
         li x6 6 //mouse
         beq x6 x5 SKIPINNER
         li x6 3 //hole card
@@ -631,17 +689,17 @@ FOR1 //loop through all sprites with x1
     abs x16 x14 x12
     li x17 5
     add x18 x15 x16
-    li x19 20 //20 is close enough
+    li x19 20 //50 is close enough
     lisp x1 x4 0 //x4 is type
     li x3 1
     bne x3 x4 NOTTOWER
-        li x19 300
+        li x19 350
         blt x18 x19 GETFIGHTING
         jmp SKIP
     NOTTOWER
     li x3 5
     bne x3 x4 NOTARCHER
-        li x19 100 //100 for archers
+        li x19 200 //100 for archers
     NOTARCHER
 
     blt x18 x19 GETFIGHTING
@@ -684,8 +742,12 @@ FOR1 //loop through all sprites with x1
         lw x7 6(x0) //load countdown
         slli x3 x1 2
         li x4 2
+        li x22 7
+        bne x2 x22 NOGIANTCOUNTDOWN
+            slli x7 x7 2
+        NOGIANTCOUNTDOWN
         bne x4 x2 NOARROWCOUNTDOWN
-            srli x7 x7 1
+            srli x7 x7 3
             jmp ARROWCOUNTDOWN
         NOARROWCOUNTDOWN
             lw x8 16(x6) //load base frame to x8
@@ -698,7 +760,7 @@ FOR1 //loop through all sprites with x1
         sw x0 67(x3)
         blt x11 x13 LEFT
         //go right
-        li x7 4 //5 pixels
+        li x7 5 //5 pixels
         sw x7 66(x3)
         jmp SKIP
         LEFT
@@ -710,7 +772,7 @@ FOR1 //loop through all sprites with x1
         sw x0 66(x3)
         blt x12 x14 UP
         //go down
-        li x7 4 //5 pixels
+        li x7 5 //5 pixels
         sw x7 67(x3)
         jmp SKIP
         UP
