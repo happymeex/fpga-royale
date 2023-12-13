@@ -2,7 +2,7 @@ spritesheet_test:
 	python3 ./spritesheet.py ./assets/fox_spritesheet.png 1 5 7
 
 spritesheet:
-	python3 ./spritesheet.py ./assets/spritesheet.png 10 4 14
+	python3 ./spritesheet.py ./assets/spritesheet.png 12 2 14
 
 sim_mouse:
 	iverilog -g2012 -o mouse.out sim/mouse_tb.sv hdl/mouse.sv hdl/synchronizer.sv
