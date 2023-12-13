@@ -58,7 +58,7 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   //elixir count
   logic [3:0] elixir;
   //all sprites
-  logic[15:0] sprites[511:0];
+  logic[12:0] sprites[511:0];
   initial begin
     for (int i = 0 ; i < 64; i++) begin
         sprites[i<<3] = 0;
@@ -193,25 +193,25 @@ always_ff @(posedge pixel_clk_in) begin
                 end
             end else if (elixir0<=8) begin
                 if (regs[30]>=elixir0) begin
-                    x_<=elixir0*75;
+                    x_<=elixir0*40-40;
                     y_<=0;
-                    frame_<=0;
+                    frame_<=16;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
                 end
             end else if (elixir1<=8) begin
                 if (regs[31]>=elixir1) begin
-                    x_<=elixir1*75;
-                    y_<=300;
-                    frame_<=0;
+                    x_<=elixir1*40-40;
+                    y_<=CANVAS_HEIGHT-20;
+                    frame_<=16;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
                 end
             end
             counter<=counter+1;
-            if (counter>25000) begin
+            if (counter>2500) begin
                 counter<=0;
                 if (elixir0<=8) begin
                     elixir0<=elixir0+1;
@@ -237,7 +237,7 @@ always_ff @(posedge pixel_clk_in) begin
                 sprite_valid_<=0;
             end
             counter<=counter+1;
-            if (counter>25000) begin
+            if (counter>2500) begin
             counter<=0;
             state<=state+1;
             end

@@ -46,16 +46,16 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
-  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_a;
-  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_a;
-  logic click_a;
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_a[1:0];
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_a[1:0];
+  logic click_a[1:0];
   logic ps2_clk_a;
   logic ps2_data_a;
   assign ps2_clk_a = pmoda[2];
   assign ps2_data_a = pmoda[0];
-  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_b;
-  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_b;
-  logic click_b;
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_b[1:0];
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_b[1:0];
+  logic click_b[1:0];
   logic ps2_clk_b;
   logic ps2_data_b;
   assign ps2_clk_b = pmodb[2];
@@ -63,16 +63,16 @@ module top_level(
 
   logic [6:0] ss_c;
   logic [29:0] blah;
-  logic test_clk;
-  initial test_clk = 1;
-  always_ff @( posedge buf_clk ) begin
-    if (ps2_clk_a == 0) test_clk <= 0;
-  end
+  // logic test_clk;
+  // initial test_clk = 1;
+  // always_ff @( posedge buf_clk ) begin
+  //   if (ps2_clk_a == 0) test_clk <= 0;
+  // end
   assign blah = 0;
   logic [31:0]val_in;
   seven_segment_controller mssc(.clk_in(buf_clk),
                                   .rst_in(sys_rst),
-                                  .val_in({click_a,mouse_x_a,2'b0,mouse_y_a}),
+                                  .val_in({click_b[1],4'b0,mouse_x_a[1],2'b0,mouse_y_a[1]}),
                                   .cat_out(ss_c),
                                   .an_out({ss0_an, ss1_an}));
   assign ss0_c = ss_c; //control upper four digit's cathodes!
@@ -95,12 +95,12 @@ module top_level(
     .y(sprite_y),
     .frame(sprite_frame),
     .sprite_valid(sprite_valid),
-    .mouse1x(mouse_x_a),
-    .mouse1y(mouse_y_a),
-    .isClicked1(click_a),
-    .mouse2x(mouse_x_b),
-    .mouse2y(mouse_y_b),
-    .isClicked2(click_b),
+    .mouse1x(mouse_x_a[1]),
+    .mouse1y(mouse_y_a[1]),
+    .isClicked1(click_a[1]),
+    .mouse2x(mouse_x_b[1]),
+    .mouse2y(mouse_y_b[1]),
+    .isClicked2(click_b[1]),
     .isOn(sw[0]),
     .uart_rx_in(uart_rxd),
     .go(btn[3])
@@ -154,9 +154,9 @@ mouse_iface #(
   .ps2_clk(ps2_clk_a),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_a),
-  .mouse_x(mouse_x_a),
-  .mouse_y(mouse_y_a),
-  .click(click_a)
+  .mouse_x(mouse_x_a[0]),
+  .mouse_y(mouse_y_a[0]),
+  .click(click_a[0])
 );
 
 mouse_iface #(
@@ -167,14 +167,21 @@ mouse_iface #(
   .ps2_clk(ps2_clk_b),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_b),
-  .mouse_x(mouse_x_b),
-  .mouse_y(mouse_y_b),
-  .click(click_b)
+  .mouse_x(mouse_x_b[0]),
+  .mouse_y(mouse_y_b[0]),
+  .click(click_b[0])
 );
 // logic [3:0] counter;
 // logic [5:0] prev_frame_count;
 // logic forward_wag;
-// always_ff @(posedge clk_pixel) begin
+ always_ff @(posedge clk_pixel) begin
+    mouse_x_a[1]<=mouse_x_a[0];
+    mouse_y_a[1]<=mouse_y_a[0];
+    mouse_x_b[1]<=mouse_x_b[0];
+    mouse_y_b[1]<=mouse_y_b[0];
+    click_a[1]<=click_a[0];
+    click_b[1]<=click_b[0];
+ end
 //   prev_frame_count <= frame_count;
 //   if (frame_count != prev_frame_count) begin
 //     if (counter == 11) begin
