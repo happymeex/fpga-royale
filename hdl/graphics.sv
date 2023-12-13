@@ -151,6 +151,8 @@ module graphics #(
   logic [PALETTE_WIDTH-1:0] dina2;
   always_comb begin
     if (write_mem_2 && reading) dina2 = read_color_index;
+    else if (in_banner) dina2 = PALETTE_SIZE - 3;
+    else if (in_water) dina2 = PALETTE_SIZE - 2;
     else dina2 = PALETTE_SIZE - 1;
   end
   xilinx_single_port_ram_read_first #(
