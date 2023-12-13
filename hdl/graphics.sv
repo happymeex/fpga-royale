@@ -58,11 +58,16 @@ module graphics #(
   localparam WATER_X_MAX = CANVAS_WIDTH - 90;
   assign in_water = hcount < WATER_X_MAX && hcount > WATER_X_MIN
                    && vcount < WATER_Y_MAX && vcount > WATER_Y_MIN;
+  logic in_banner; // grey bars for holding troop card UI
+  localparam BANNER_TOP_Y_MIN = 20;
+  localparam BANNER_TOP_Y_MAX = 20 + SPRITE_FRAME_HEIGHT;
+  localparam BANNER_BOTTOM_Y_MIN = CANVAS_HEIGHT - 20 - SPRITE_FRAME_HEIGHT;
+  localparam BANNER_BOTTOM_Y_MAX = CANVAS_HEIGHT - 20;
+  assign in_banner = (vcount > BANNER_TOP_Y_MIN && vcount < BANNER_TOP_Y_MAX)
+                    || (vcount > BANNER_BOTTOM_Y_MIN && vcount < BANNER_TOP_Y_MAX);
 
   logic [7:0] red, green, blue; // values sent to HDMI during drawing period
   logic [23:0] color_out;
-  //logic in_sprite = ((hcount >= sprite_x && hcount < (sprite_x + SPRITE_FRAME_WIDTH)) &&
-  //                   (vcount >= sprite_y && vcount < (sprite_y + SPRITE_FRAME_HEIGHT)));
   logic draw = active_draw && in_canvas;
   assign red = draw ? color_out[23:16] : 0;
   assign green = draw ? color_out[15:8] : 0;
@@ -120,6 +125,7 @@ module graphics #(
   logic [PALETTE_WIDTH-1:0] dina1;
   always_comb begin
     if (write_mem_1 && reading) dina1 = read_color_index;
+    else if (in_banner) dina1 = PALETTE_SIZE - 3;
     else if (in_water) dina1 = PALETTE_SIZE - 2;
     else dina1 = PALETTE_SIZE - 1;
   end
