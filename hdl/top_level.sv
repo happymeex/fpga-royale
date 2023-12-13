@@ -37,7 +37,7 @@ module top_level(
   hdmi_clk_wiz_720p mhdmicw (.clk_pixel(clk_pixel),.clk_tmds(clk_5x),
           .reset(0), .locked(locked), .clk_ref(buf_clk));
   
-  localparam NUM_FRAMES = 28;
+  localparam NUM_FRAMES = 24;
   localparam CANVAS_HEIGHT = 720;
   localparam CANVAS_WIDTH = 360;
   localparam PALETTE_SIZE = 16;
@@ -80,7 +80,7 @@ module top_level(
     .CANVAS_HEIGHT(CANVAS_HEIGHT),
     .CANVAS_WIDTH(CANVAS_WIDTH),
     .NUM_FRAMES(NUM_FRAMES),
-    .INSTRUCTIONS_SIZE(750),
+    .INSTRUCTIONS_SIZE(800),
     .MAX_SPRITES(64),
     .MEMORY_SIZE(320),
     .INSTRUCTION_WIDTH(36),

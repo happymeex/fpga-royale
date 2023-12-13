@@ -203,7 +203,7 @@ always_ff @(posedge pixel_clk_in) begin
                 if (regs[30]>=elixir0) begin
                     x_<=elixir0*40-40;
                     y_<=0;
-                    frame_<=36;
+                    frame_<=18;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
@@ -212,7 +212,7 @@ always_ff @(posedge pixel_clk_in) begin
                 if (regs[31]>=elixir1) begin
                     x_<=elixir1*40-40;
                     y_<=CANVAS_HEIGHT-20;
-                    frame_<=36;
+                    frame_<=18;
                     sprite_valid_<=1;
                 end else begin
                     sprite_valid_<=0;
