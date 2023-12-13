@@ -124,7 +124,8 @@ module top_level(
     .SPRITE_FRAME_WIDTH(48), // testing
     .SPRITE_FRAME_HEIGHT(48),
     .NUM_FRAMES(NUM_FRAMES),
-    .PALETTE_SIZE(PALETTE_SIZE)
+    .PALETTE_SIZE(PALETTE_SIZE),
+    .TRANSPARENT_COLOR_INDEX(3)
   ) gr(
     .sys_rst(sys_rst),
     .clk_pixel(clk_pixel),

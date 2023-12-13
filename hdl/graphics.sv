@@ -16,6 +16,7 @@ module graphics #(
   parameter CANVAS_WIDTH = 360,
   parameter CANVAS_HEIGHT = 720,
   parameter PALETTE_SIZE = 8
+  parameter TRANSPARENT_COLOR_INDEX = 0
 )(
   input wire sys_rst,
   input wire clk_pixel, clk_5x,
@@ -64,7 +65,7 @@ module graphics #(
   localparam BANNER_BOTTOM_Y_MIN = CANVAS_HEIGHT - 20 - SPRITE_FRAME_HEIGHT;
   localparam BANNER_BOTTOM_Y_MAX = CANVAS_HEIGHT - 20;
   assign in_banner = (vcount > BANNER_TOP_Y_MIN && vcount < BANNER_TOP_Y_MAX)
-                    || (vcount > BANNER_BOTTOM_Y_MIN && vcount < BANNER_TOP_Y_MAX);
+                    || (vcount > BANNER_BOTTOM_Y_MIN && vcount < BANNER_BOTTOM_Y_MAX);
 
   logic [7:0] red, green, blue; // values sent to HDMI during drawing period
   logic [23:0] color_out;
@@ -118,7 +119,7 @@ module graphics #(
   logic in_range;
   assign in_range = frame_x < CANVAS_WIDTH && frame_y < CANVAS_HEIGHT;
 
-  logic is_transparent = read_color_index == 0; // true if current pixel being read from spritesheet is transparent
+  logic is_transparent = read_color_index == TRANSPARENT_COLOR_INDEX; // true if current pixel being read from spritesheet is transparent
 
   logic wea1;
   assign wea1 = write_mem_1 && reading && !is_transparent && in_range || !write_mem_1;
