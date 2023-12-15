@@ -361,7 +361,7 @@ beq x4 x0 NODEPLOY
             li x6 100
             bge x6 x7 NODEPLOY //cannot deploy in hole cards
             lisp x3 x6 1 //get mouse1x
-            li x10 0
+            li x10 2
             lisp x5 x11 6 //x11 = type
             slli x11 x11 2
             lw x11 19(x11)
@@ -411,7 +411,7 @@ beq x4 x0 NODEPLOY2
             li x6 660
             blt x6 x7 NODEPLOY2 //cannot deploy in hole cards
             lisp x3 x6 1 //get mouse2x
-            li x10 63
+            li x10 59
             lisp x5 x11 6 //x11 = type
             slli x11 x11 2
             lw x11 19(x11)
@@ -607,7 +607,7 @@ FOR1 //loop through all sprites with x1
                 lisp x1 x9 7 //x9 = team
                 bne x9 x0 TEAM0
                     //team1
-                    li x10 63
+                    li x10 59
                     LOOPSELECTARROW
                     lisp x10 x11 0 //x11 = x10 type
                     bne x11 x0 NOTARROWCARD
@@ -638,7 +638,7 @@ FOR1 //loop through all sprites with x1
                     bne x10 x0 LOOPSELECTARROW
                     jmp SKIP
                 TEAM0
-                    li x10 0
+                    li x10 2
                     LOOPSELECTARROW2
                     lisp x10 x11 0 //x11 = x10 type
                     bne x11 x0 NOTARROWCARD2
@@ -673,7 +673,7 @@ FOR1 //loop through all sprites with x1
                 REGULARATTACK
                 li x7 1
              //   spsub x1 x7 3 //decrement frame by 1
-               // attack x7 x1 4 5 //attack!
+                attack x7 x1 4 5 //attack!
             jmp SKIP
         FIGHT1
             lisp x1 x2 0
@@ -763,7 +763,7 @@ FOR1 //loop through all sprites with x1
         abs x15 x13 x11
         abs x16 x14 x12
         add x18 x15 x16
-        li x19 50 //50 is close enough
+        li x19 20 //20 is close enough
         bge x18 x19 HALFDONE
         attack  x20 x1 4 5 //attack
         spli x1 0 0 //kill sprite
