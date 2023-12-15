@@ -190,12 +190,14 @@ module ps2interface(
 
 			// upper limit for 100us delay counter.
 			// 10000 * 10ns = 100us
-			parameter [13:0] DELAY_100US = 14'b10011100010000;
+			parameter [13:0] DELAY_100US = 14'b01110100000001;
+		//	parameter [13:0] DELAY_100US = 14'b10011100010000;
 																			 // 10000 clock periods
 			// upper limit for 20us delay counter.
 			// 2000 * 10ns = 20us
-			parameter [10:0] DELAY_20US = 11'b11111010000;
+	//		parameter [10:0] DELAY_20US = 11'b11111010000;
 																			  // 2000 clock periods
+			parameter [10:0] DELAY_20US = 11'b10111001101;																
 			// upper limit for 63clk delay counter.
 			parameter [5:0] DELAY_63CLK = 6'b111111;
 																				 // 63 clock periods

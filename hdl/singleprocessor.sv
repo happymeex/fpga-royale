@@ -24,7 +24,6 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
   input wire isClicked2,
   input wire isOn,
   input wire go,
-  input wire uart_rx_in,
   output logic [7:0] hp00,
   output logic [7:0] hp01,
   output logic [7:0] hp10,
@@ -106,27 +105,8 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .regcea(1),   // Output register enable
     .douta(memout)      // RAM output data, width determined from RAM_WIDTH
   );
-    logic [7:0] urx_brx_data;
-    logic urx_brx_valid;
-    logic [31:0] brx_mem_addr;
-    logic [35:0] brx_mem_data;
-    logic brx_mem_valid;
-    uart_rx #(.CLOCKS_PER_BAUD(645)) urx (
-        .clk(pixel_clk_in),
-        .rx(uart_rx_in),
-        .data_o(urx_brx_data),
-        .valid_o(urx_brx_valid)
-    );
-    ram_bridge_rx brx (
-        .pixel_clk_in(pixel_clk_in),
-        .data_in(urx_brx_data),
-        .valid_in(urx_brx_valid),
-        .addr(brx_mem_addr),
-        .data_out(brx_mem_data),
-        .valid_out(brx_mem_valid)
-    );
   //instructions
-  xilinx_true_dual_port_read_first_2_clock_ram #(
+  xilinx_single_port_ram_read_first #(
     .RAM_WIDTH(INSTRUCTION_WIDTH),                       // Specify RAM data width
     .RAM_DEPTH(INSTRUCTIONS_SIZE+1),                     // Specify RAM depth (number of entries)
     .RAM_PERFORMANCE("LOW_LATENCY"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
@@ -140,24 +120,12 @@ module singleprocessor #( parameter CANVAS_WIDTH,parameter CANVAS_HEIGHT, parame
     .ena(1),         // RAM Enable, for additional power savings, disable port when not in use
     .rsta(rst_in),       // Output reset (does not affect memory contents)
     .regcea(1),   // Output register enable
-    .douta(oldinstruction),      // RAM output data, width determined from RAM_WIDTH
-    .addrb(brx_mem_addr),     // Address bus, width determined from RAM_DEPTH
-    .dinb(brx_mem_data),       // RAM input data, width determined from RAM_WIDTH
-    .clkb(pixel_clk_in),       // Clock
-    .web(brx_mem_valid),         // Write enable
-    .enb(1),         // RAM Enable, for additional power savings, disable port when not in use
-    .rstb(rst_in),       // Output reset (does not affect memory contents)
-    .regceb(0),   // Output register enable
-    .doutb()      // RAM output data, width determined from RAM_WIDTH
+    .douta(oldinstruction)      // RAM output data, width determined from RAM_WIDTH
   );
 logic [31:0] counter;
 logic [3:0] elixir0;
 logic [3:0] elixir1; 
 always_ff @(posedge pixel_clk_in) begin
-    if (brx_mem_addr==0 && brx_mem_valid)begin
-        count<=0;
-        nop<=1;
-    end
     if (isOn) begin
         sprites[496]<=6;
         sprites[497]<=mouse1x;

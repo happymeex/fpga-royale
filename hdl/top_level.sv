@@ -46,16 +46,16 @@ module top_level(
   logic [$clog2(NUM_FRAMES)-1:0] sprite_frame;
   logic [$clog2(CANVAS_WIDTH)-1:0] sprite_x;
   logic [$clog2(CANVAS_HEIGHT)-1:0] sprite_y;
-  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_a[1:0];
-  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_a[1:0];
-  logic click_a[1:0];
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_a[3:0];
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_a[3:0];
+  logic click_a[3:0];
   logic ps2_clk_a;
   logic ps2_data_a;
   assign ps2_clk_a = pmoda[2];
   assign ps2_data_a = pmoda[0];
-  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_b[1:0];
-  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_b[1:0];
-  logic click_b[1:0];
+  logic [$clog2(CANVAS_WIDTH)-1:0] mouse_x_b[3:0];
+  logic [$clog2(CANVAS_HEIGHT)-1:0] mouse_y_b[3:0];
+  logic click_b[3:0];
   logic ps2_clk_b;
   logic ps2_data_b;
   assign ps2_clk_b = pmodb[2];
@@ -97,14 +97,13 @@ module top_level(
     .y(sprite_y),
     .frame(sprite_frame),
     .sprite_valid(sprite_valid),
-    .mouse1x(mouse_x_a[1]),
-    .mouse1y(mouse_y_a[1]),
-    .isClicked1(click_a[1]),
-    .mouse2x(mouse_x_b[1]),
-    .mouse2y(mouse_y_b[1]),
-    .isClicked2(click_b[1]),
+    .mouse1x(mouse_x_a[3]),
+    .mouse1y(mouse_y_a[3]),
+    .isClicked1(click_a[3]),
+    .mouse2x(mouse_x_b[3]),
+    .mouse2y(mouse_y_b[3]),
+    .isClicked2(click_b[3]),
     .isOn(sw[0]),
-    .uart_rx_in(uart_rxd),
     .go(btn[3]),
     .hp00(hp00),
     .hp01(hp01),
@@ -157,7 +156,7 @@ mouse_iface #(
   .CANVAS_WIDTH(CANVAS_WIDTH),
   .CANVAS_HEIGHT(CANVAS_HEIGHT)
 ) ms_a (
-  .clk_in(buf_clk),
+  .clk_in(clk_pixel),
   .ps2_clk(ps2_clk_a),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_a),
@@ -170,7 +169,7 @@ mouse_iface #(
   .CANVAS_WIDTH(CANVAS_WIDTH),
   .CANVAS_HEIGHT(CANVAS_HEIGHT)
 ) ms_b (
-  .clk_in(buf_clk),
+  .clk_in(clk_pixel),
   .ps2_clk(ps2_clk_b),
   .rst_in(sys_rst),
   .ps2_data(ps2_data_b),
@@ -189,25 +188,20 @@ mouse_iface #(
     click_a[1]<=click_a[0];
     click_b[1]<=click_b[0];
  end
-//   prev_frame_count <= frame_count;
-//   if (frame_count != prev_frame_count) begin
-//     if (counter == 11) begin
-//       counter <= 0;
-//       if (frame_number >= 4) begin
-//         forward_wag <= 0;
-//         frame_number <= frame_number - 1;
-//       end else if (frame_number == 0) begin
-//         forward_wag <= 1;
-//         frame_number <= frame_number + 1;
-//       end else begin
-//         if (forward_wag) frame_number <= frame_number + 1;
-//         else frame_number <= frame_number - 1;
-//       end
-//     end else begin
-//       counter <= counter + 1;
-//     end
-//   end
-// end
+ always_ff @(posedge clk_pixel) begin
+    mouse_x_a[2]<=mouse_x_a[1];
+    mouse_y_a[2]<=mouse_y_a[1];
+    mouse_x_b[2]<=mouse_x_b[1];
+    mouse_y_b[2]<=mouse_y_b[1];
+    click_a[2]<=click_a[1];
+    click_b[2]<=click_b[1];
+    mouse_x_a[3]<=mouse_x_a[2];
+    mouse_y_a[3]<=mouse_y_a[2];
+    mouse_x_b[3]<=mouse_x_b[2];
+    mouse_y_b[3]<=mouse_y_b[2];
+    click_a[3]<=click_a[2];
+    click_b[3]<=click_b[2];
+ end
 
 endmodule
 
